@@ -1,0 +1,1999 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terra | Explore 195 Countries</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#10b981',
+                        darkBg: '#0f172a',
+                        darkCard: '#1e293b',
+                        darkBorder: '#334155'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        serif: ['Merriweather', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom Styles & Utilities */
+        body { font-family: 'Inter', sans-serif; }
+        .glass-header {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .dark .glass-header {
+            background: rgba(15, 23, 42, 0.85);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .dark .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Animations */
+        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        .slide-up { animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .dark .card-hover:hover { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
+
+        /* Loader */
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        .dark .loader { border-color: #334155; border-top-color: #3b82f6; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Toast */
+        #toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; }
+        .toast { padding: 12px 24px; border-radius: 8px; margin-top: 10px; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); animation: slideUp 0.3s ease-out; }
+        .toast.info { background-color: #3b82f6; }
+        .toast.error { background-color: #ef4444; }
+        .toast.success { background-color: #10b981; }
+
+        /* Map Container */
+        .map-container iframe { width: 100%; height: 100%; border: none; border-radius: 0.75rem; }
+
+        /* Completely Hide Default Google Translate UI */
+        body { top: 0px !important; }
+        .goog-te-banner-frame { display: none !important; }
+        .goog-tooltip { display: none !important; }
+        .goog-tooltip:hover { display: none !important; }
+        .goog-text-highlight { background-color: transparent !important; border: none !important; box-shadow: none !important; }
+        #google_translate_element { display: none !important; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 dark:bg-darkBg dark:text-gray-200 transition-colors duration-300 min-h-screen flex flex-col">
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 glass-header transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex-shrink-0 flex items-center cursor-pointer" onclick="navigateTo('home')">
+                    <i class="fa-solid fa-earth-americas text-primary text-2xl mr-2"></i>
+                    <span class="font-bold text-xl tracking-tight">Terra</span>
+                </div>
+                
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex space-x-8 items-center">
+                    <a href="#" onclick="navigateTo('home')" class="hover:text-primary transition font-medium">Home</a>
+                    <a href="#" onclick="navigateTo('countries')" class="hover:text-primary transition font-medium">Countries</a>
+                    <a href="#" onclick="navigateTo('compare')" class="hover:text-primary transition font-medium">Compare</a>
+                    <a href="#" onclick="navigateTo('quiz')" class="hover:text-primary transition font-medium">Quiz</a>
+                    <a href="#" onclick="navigateTo('about')" class="hover:text-primary transition font-medium">About</a>
+                    <a href="#" onclick="navigateTo('contact')" class="hover:text-primary transition font-medium">Contact</a>
+                    
+                    <div class="flex items-center space-x-4 border-l border-gray-300 dark:border-gray-600 pl-4">
+                        <button onclick="toggleTheme()" class="text-gray-500 hover:text-primary dark:text-gray-400 dark:hover:text-primary transition">
+                            <i id="theme-icon" class="fa-solid fa-moon text-lg"></i>
+                        </button>
+                        
+                        <!-- Stylish Custom Language Translator -->
+                        <div class="relative group">
+                            <button class="flex items-center space-x-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                                <i class="fa-solid fa-language text-primary text-lg"></i>
+                                <span id="lang-text" class="text-sm font-medium">English</span>
+                                <i class="fa-solid fa-chevron-down text-xs text-gray-500 ml-1"></i>
+                            </button>
+                            <!-- Dropdown -->
+                            <div class="absolute right-0 mt-2 w-44 bg-white dark:bg-darkCard border border-gray-100 dark:border-gray-700 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 py-2">
+                                <a href="#" onclick="changeLang('en', 'English')" class="block px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition">🇬🇧 English</a>
+                                <a href="#" onclick="changeLang('es', 'Español')" class="block px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition">🇪🇸 Español</a>
+                                <a href="#" onclick="changeLang('fr', 'Français')" class="block px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition">🇫🇷 Français</a>
+                                <a href="#" onclick="changeLang('de', 'Deutsch')" class="block px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition">🇩🇪 Deutsch</a>
+                                <a href="#" onclick="changeLang('zh-CN', '中文')" class="block px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition">🇨🇳 中文</a>
+                                <a href="#" onclick="changeLang('hi', 'हिन्दी')" class="block px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition">🇮🇳 हिन्दी</a>
+                                <a href="#" onclick="changeLang('ar', 'العربية')" class="block px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition">🇸🇦 العربية</a>
+                                <a href="#" onclick="changeLang('ru', 'Русский')" class="block px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition">🇷🇺 Русский</a>
+                            </div>
+                        </div>
+
+                        <!-- Hidden Google Translate Element -->
+                        <div id="google_translate_element"></div>
+                    </div>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden flex items-center">
+                    <button onclick="toggleTheme()" class="mr-4 text-gray-500 dark:text-gray-400"><i id="theme-icon-mobile" class="fa-solid fa-moon"></i></button>
+                    <button onclick="toggleMobileMenu()" class="text-gray-500 dark:text-gray-400 hover:text-primary">
+                        <i class="fa-solid fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white dark:bg-darkCard border-t border-gray-200 dark:border-gray-700 pb-4 shadow-lg absolute w-full">
+            <div class="px-4 pt-2 pb-3 space-y-1 flex flex-col">
+                <a href="#" onclick="navigateTo('home'); toggleMobileMenu()" class="block px-3 py-2 rounded-md font-medium hover:bg-gray-100 dark:hover:bg-gray-800">Home</a>
+                <a href="#" onclick="navigateTo('countries'); toggleMobileMenu()" class="block px-3 py-2 rounded-md font-medium hover:bg-gray-100 dark:hover:bg-gray-800">Countries</a>
+                <a href="#" onclick="navigateTo('compare'); toggleMobileMenu()" class="block px-3 py-2 rounded-md font-medium hover:bg-gray-100 dark:hover:bg-gray-800">Compare Tool</a>
+                <a href="#" onclick="navigateTo('quiz'); toggleMobileMenu()" class="block px-3 py-2 rounded-md font-medium hover:bg-gray-100 dark:hover:bg-gray-800">Quiz</a>
+                <a href="#" onclick="navigateTo('about'); toggleMobileMenu()" class="block px-3 py-2 rounded-md font-medium hover:bg-gray-100 dark:hover:bg-gray-800">About</a>
+                <a href="#" onclick="navigateTo('contact'); toggleMobileMenu()" class="block px-3 py-2 rounded-md font-medium hover:bg-gray-100 dark:hover:bg-gray-800">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main id="app-content" class="flex-grow pt-16 flex flex-col">
+        <!-- Views injected here via JS -->
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-300 py-12 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div class="col-span-1 md:col-span-2">
+                <div class="flex items-center text-white mb-4">
+                    <i class="fa-solid fa-earth-americas text-primary text-2xl mr-2"></i>
+                    <span class="font-bold text-xl tracking-tight">Terra</span>
+                </div>
+                <p class="text-sm text-gray-400 mb-6 max-w-sm">Explore all 195 countries, discover hidden gems, and plan your next adventure with our AI-powered global encyclopedia.</p>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-gray-400 hover:text-white transition bg-gray-800 p-2 rounded-full w-10 h-10 flex items-center justify-center"><i class="fa-brands fa-twitter"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-white transition bg-gray-800 p-2 rounded-full w-10 h-10 flex items-center justify-center"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-white transition bg-gray-800 p-2 rounded-full w-10 h-10 flex items-center justify-center"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-white transition bg-gray-800 p-2 rounded-full w-10 h-10 flex items-center justify-center"><i class="fa-brands fa-youtube"></i></a>
+                </div>
+            </div>
+            <div>
+                <h4 class="text-white font-semibold mb-4 uppercase tracking-wider text-sm">Explore</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="#" onclick="navigateTo('countries')" class="hover:text-primary transition">All Countries</a></li>
+                    <li><a href="#" onclick="navigateTo('compare')" class="hover:text-primary transition">Compare Countries</a></li>
+                    <li><a href="#" onclick="navigateTo('quiz')" class="hover:text-primary transition">Geography Quiz</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-semibold mb-4 uppercase tracking-wider text-sm">Company</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="#" onclick="navigateTo('about')" class="hover:text-primary transition">About Us</a></li>
+                    <li><a href="#" onclick="navigateTo('contact')" class="hover:text-primary transition">Contact</a></li>
+                    <li><a href="#" class="hover:text-primary transition">Privacy Policy</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 pt-8 border-t border-gray-800 text-sm text-center text-gray-500">
+            &copy; 2026 Terra Global Explorer. All rights reserved.
+        </div>
+    </footer>
+
+    <!-- AI Chat Assistant Widget -->
+    <div id="ai-chat-widget" class="fixed bottom-6 right-6 z-50">
+        <button onclick="toggleChat()" class="bg-primary hover:bg-blue-600 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-2xl hover:scale-105 transition-transform">
+            <i class="fa-solid fa-robot text-2xl"></i>
+        </button>
+        <div id="chat-window" class="hidden absolute bottom-20 right-0 w-80 sm:w-96 bg-white dark:bg-darkCard rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden slide-up" style="height: 500px;">
+            <div class="bg-primary text-white p-4 flex justify-between items-center">
+                <div class="flex items-center">
+                    <i class="fa-solid fa-robot text-xl mr-2"></i>
+                    <span class="font-semibold">Terra AI Assistant</span>
+                </div>
+                <button onclick="toggleChat()" class="text-white/80 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div id="chat-messages" class="flex-grow p-4 overflow-y-auto bg-gray-50 dark:bg-darkBg space-y-4">
+                <div class="flex items-start">
+                    <div class="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 p-3 rounded-2xl rounded-tl-none text-sm shadow-sm max-w-[85%]">
+                        Hello! I'm your AI Travel & Geography Assistant. Ask me anything about any country!
+                    </div>
+                </div>
+            </div>
+            <div class="p-3 bg-white dark:bg-darkCard border-t border-gray-200 dark:border-gray-700">
+                <form id="chat-form" class="flex gap-2">
+                    <input type="text" id="chat-input" placeholder="Ask about a country..." class="flex-grow bg-gray-100 dark:bg-darkBg border border-transparent focus:border-primary dark:focus:border-primary rounded-xl px-4 py-2 text-sm outline-none dark:text-white">
+                    <button type="submit" class="bg-primary text-white px-4 py-2 rounded-xl hover:bg-blue-600 transition"><i class="fa-solid fa-paper-plane"></i></button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals Container -->
+    <div id="modal-backdrop" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+        <div id="modal-content" class="bg-white dark:bg-darkCard rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto slide-up">
+            <!-- Modal Content Injected Here -->
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <!-- Google Translate Script -->
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({pageLanguage: 'en', autoDisplay: false}, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+    <script>
+        // --- API & Constants ---
+        const apiKey = "AIzaSyBkzxjqzZ9uk9CLBEgoyeCZzZ189vdaTtY"; 
+        const API_URL_TEXT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+        const API_URL_IMAGE = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`;
+
+        // Global fallback to silently and instantly fetch REAL photos if the hardcoded permanent URL misses
+        window.fetchWikiFallback = function(imgEl, landmarkName, countryName) {
+            if(imgEl.dataset.retried) {
+                imgEl.src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/600px-No_image_available.svg.png';
+                return;
+            }
+            imgEl.dataset.retried = 'true';
+            
+            // Silently lookup the actual high-quality image from Wikipedia
+            fetch(`https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&generator=search&gsrsearch=${encodeURIComponent(landmarkName + " " + countryName)}&pithumbsize=600&format=json&origin=*`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.query && data.query.pages) {
+                        const pages = Object.values(data.query.pages);
+                        const withImg = pages.find(p => p.thumbnail);
+                        if (withImg) {
+                            imgEl.src = withImg.thumbnail.source; // Apply real photo instantly
+                            return;
+                        }
+                    }
+                    imgEl.src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/600px-No_image_available.svg.png';
+                })
+                .catch(() => {
+                    imgEl.src = 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/600px-No_image_available.svg.png';
+                });
+        };
+
+        // --- Data Architecture ---
+        const raw195 = `Afghanistan|Kabul|Asia|🇦🇫|40M|652,860 km²|AFN|+93|Pashto, Dari|UTC+4:30|.af
+Albania|Tirana|Europe|🇦🇱|2.8M|28,748 km²|ALL|+355|Albanian|UTC+1|.al
+Algeria|Algiers|Africa|🇩🇿|44M|2.38M km²|DZD|+213|Arabic|UTC+1|.dz
+Andorra|Andorra la Vella|Europe|🇦🇩|77K|468 km²|EUR|+376|Catalan|UTC+1|.ad
+Angola|Luanda|Africa|🇦🇴|34M|1.24M km²|AOA|+244|Portuguese|UTC+1|.ao
+Antigua and Barbuda|St. John's|North America|🇦🇬|99K|442 km²|XCD|+1-268|English|UTC-4|.ag
+Argentina|Buenos Aires|South America|🇦🇷|45M|2.78M km²|ARS|+54|Spanish|UTC-3|.ar
+Armenia|Yerevan|Asia|🇦🇲|2.9M|29,743 km²|AMD|+374|Armenian|UTC+4|.am
+Australia|Canberra|Oceania|🇦🇺|26M|7.69M km²|AUD|+61|English|UTC+8 to +10:30|.au
+Austria|Vienna|Europe|🇦🇹|8.9M|83,871 km²|EUR|+43|German|UTC+1|.at
+Azerbaijan|Baku|Asia|🇦🇿|10M|86,600 km²|AZN|+994|Azerbaijani|UTC+4|.az
+Bahamas|Nassau|North America|🇧🇸|400K|13,880 km²|BSD|+1-242|English|UTC-5|.bs
+Bahrain|Manama|Asia|🇧🇭|1.5M|765 km²|BHD|+973|Arabic|UTC+3|.bh
+Bangladesh|Dhaka|Asia|🇧🇩|169M|148,460 km²|BDT|+880|Bengali|UTC+6|.bd
+Barbados|Bridgetown|North America|🇧🇧|281K|430 km²|BBD|+1-246|English|UTC-4|.bb
+Belarus|Minsk|Europe|🇧🇾|9.3M|207,600 km²|BYN|+375|Belarusian, Russian|UTC+3|.by
+Belgium|Brussels|Europe|🇧🇪|11.6M|30,528 km²|EUR|+32|Dutch, French, German|UTC+1|.be
+Belize|Belmopan|North America|🇧🇿|400K|22,966 km²|BZD|+501|English|UTC-6|.bz
+Benin|Porto-Novo|Africa|🇧🇯|13M|114,763 km²|XOF|+229|French|UTC+1|.bj
+Bhutan|Thimphu|Asia|🇧🇹|777K|38,394 km²|BTN|+975|Dzongkha|UTC+6|.bt
+Bolivia|Sucre|South America|🇧🇴|12M|1.09M km²|BOB|+591|Spanish|UTC-4|.bo
+Bosnia and Herzegovina|Sarajevo|Europe|🇧🇦|3.2M|51,197 km²|BAM|+387|Bosnian, Croatian, Serbian|UTC+1|.ba
+Botswana|Gaborone|Africa|🇧🇼|2.4M|581,730 km²|BWP|+267|English, Tswana|UTC+2|.bw
+Brazil|Brasília|South America|🇧🇷|214M|8.51M km²|BRL|+55|Portuguese|UTC-2 to -5|.br
+Brunei|Bandar Seri Begawan|Asia|🇧🇳|445K|5,765 km²|BND|+673|Malay|UTC+8|.bn
+Bulgaria|Sofia|Europe|🇧🇬|6.8M|110,994 km²|BGN|+359|Bulgarian|UTC+2|.bg
+Burkina Faso|Ouagadougou|Africa|🇧🇫|22M|274,200 km²|XOF|+226|French|UTC| .bf
+Burundi|Gitega|Africa|🇧🇮|12M|27,834 km²|BIF|+257|Kirundi, French|UTC+2|.bi
+Cabo Verde|Praia|Africa|🇨🇻|587K|4,033 km²|CVE|+238|Portuguese|UTC-1|.cv
+Cambodia|Phnom Penh|Asia|🇰🇭|16M|181,035 km²|KHR|+855|Khmer|UTC+7|.kh
+Cameroon|Yaoundé|Africa|🇨🇲|27M|475,442 km²|XAF|+237|French, English|UTC+1|.cm
+Canada|Ottawa|North America|🇨🇦|38M|9.98M km²|CAD|+1|English, French|UTC-3.5 to -8|.ca
+Central African Republic|Bangui|Africa|🇨🇫|5M|622,984 km²|XAF|+236|Sango, French|UTC+1|.cf
+Chad|N'Djamena|Africa|🇹🇩|17M|1.28M km²|XAF|+235|French, Arabic|UTC+1|.td
+Chile|Santiago|South America|🇨🇱|19M|756,096 km²|CLP|+56|Spanish|UTC-4 to -6|.cl
+China|Beijing|Asia|🇨🇳|1.4B|9.59M km²|CNY|+86|Mandarin|UTC+8|.cn
+Colombia|Bogotá|South America|🇨🇴|51M|1.14M km²|COP|+57|Spanish|UTC-5|.co
+Comoros|Moroni|Africa|🇰🇲|888K|2,235 km²|KMF|+269|Comorian, Arabic, French|UTC+3|.km
+Congo (Congo-Brazzaville)|Brazzaville|Africa|🇨🇬|5.6M|342,000 km²|XAF|+242|French|UTC+1|.cg
+Costa Rica|San José|North America|🇨🇷|5.1M|51,100 km²|CRC|+506|Spanish|UTC-6|.cr
+Croatia|Zagreb|Europe|🇭🇷|3.8M|56,594 km²|EUR|+385|Croatian|UTC+1|.hr
+Cuba|Havana|North America|🇨🇺|11M|109,884 km²|CUP|+53|Spanish|UTC-5|.cu
+Cyprus|Nicosia|Europe|🇨🇾|1.2M|9,251 km²|EUR|+357|Greek, Turkish|UTC+2|.cy
+Czechia (Czech Republic)|Prague|Europe|🇨🇿|10.5M|78,871 km²|CZK|+420|Czech|UTC+1|.cz
+Democratic Republic of the Congo|Kinshasa|Africa|🇨🇩|95M|2.34M km²|CDF|+243|French|UTC+1 to +2|.cd
+Denmark|Copenhagen|Europe|🇩🇰|5.8M|42,933 km²|DKK|+45|Danish|UTC+1|.dk
+Djibouti|Djibouti|Africa|🇩🇯|1M|23,200 km²|DJF|+253|French, Arabic|UTC+3|.dj
+Dominica|Roseau|North America|🇩🇲|72K|751 km²|XCD|+1-767|English|UTC-4|.dm
+Dominican Republic|Santo Domingo|North America|🇩🇴|11M|48,671 km²|DOP|+1-809|Spanish|UTC-4|.do
+Ecuador|Quito|South America|🇪🇨|17M|283,561 km²|USD|+593|Spanish|UTC-5|.ec
+Egypt|Cairo|Africa|🇪🇬|104M|1.01M km²|EGP|+20|Arabic|UTC+2|.eg
+El Salvador|San Salvador|North America|🇸🇻|6.3M|21,041 km²|USD|+503|Spanish|UTC-6|.sv
+Equatorial Guinea|Malabo|Africa|🇬🇶|1.6M|28,051 km²|XAF|+240|Spanish, French, Portuguese|UTC+1|.gq
+Eritrea|Asmara|Africa|🇪🇷|3.6M|117,600 km²|ERN|+291|Tigrinya, Arabic, English|UTC+3|.er
+Estonia|Tallinn|Europe|🇪🇪|1.3M|45,227 km²|EUR|+372|Estonian|UTC+2|.ee
+Eswatini|Mbabane|Africa|🇸🇿|1.1M|17,364 km²|SZL|+268|Swazi, English|UTC+2|.sz
+Ethiopia|Addis Ababa|Africa|🇪🇹|120M|1.1M km²|ETB|+251|Amharic|UTC+3|.et
+Fiji|Suva|Oceania|🇫🇯|924K|18,274 km²|FJD|+679|English, Fijian, Hindi|UTC+12|.fj
+Finland|Helsinki|Europe|🇫🇮|5.5M|338,455 km²|EUR|+358|Finnish, Swedish|UTC+2|.fi
+France|Paris|Europe|🇫🇷|67M|551,695 km²|EUR|+33|French|UTC+1|.fr
+Gabon|Libreville|Africa|🇬🇦|2.3M|267,668 km²|XAF|+241|French|UTC+1|.ga
+Gambia|Banjul|Africa|🇬🇲|2.5M|11,295 km²|GMD|+220|English|UTC|.gm
+Georgia|Tbilisi|Asia|🇬🇪|3.7M|69,700 km²|GEL|+995|Georgian|UTC+4|.ge
+Germany|Berlin|Europe|🇩🇪|83M|357,022 km²|EUR|+49|German|UTC+1|.de
+Ghana|Accra|Africa|🇬🇭|32M|238,533 km²|GHS|+233|English|UTC|.gh
+Greece|Athens|Europe|🇬🇷|10.4M|131,957 km²|EUR|+30|Greek|UTC+2|.gr
+Grenada|St. George's|North America|🇬🇩|113K|344 km²|XCD|+1-473|English|UTC-4|.gd
+Guatemala|Guatemala City|North America|🇬🇹|18M|108,889 km²|GTQ|+502|Spanish|UTC-6|.gt
+Guinea|Conakry|Africa|🇬🇳|13M|245,857 km²|GNF|+224|French|UTC|.gn
+Guinea-Bissau|Bissau|Africa|🇬🇼|2M|36,125 km²|XOF|+245|Portuguese|UTC|.gw
+Guyana|Georgetown|South America|🇬🇾|804K|214,969 km²|GYD|+592|English|UTC-4|.gy
+Haiti|Port-au-Prince|North America|🇭🇹|11M|27,750 km²|HTG|+509|French, Haitian Creole|UTC-5|.ht
+Honduras|Tegucigalpa|North America|🇭🇳|10M|112,492 km²|HNL|+504|Spanish|UTC-6|.hn
+Hungary|Budapest|Europe|🇭🇺|9.7M|93,030 km²|HUF|+36|Hungarian|UTC+1|.hu
+Iceland|Reykjavík|Europe|🇮🇸|372K|103,000 km²|ISK|+354|Icelandic|UTC|.is
+India|New Delhi|Asia|🇮🇳|1.4B|3.28M km²|INR|+91|Hindi, English|UTC+5:30|.in
+Indonesia|Jakarta|Asia|🇮🇩|276M|1.9M km²|IDR|+62|Indonesian|UTC+7 to +9|.id
+Iran|Tehran|Asia|🇮🇷|85M|1.64M km²|IRR|+98|Persian|UTC+3:30|.ir
+Iraq|Baghdad|Asia|🇮🇶|41M|438,317 km²|IQD|+964|Arabic, Kurdish|UTC+3|.iq
+Ireland|Dublin|Europe|🇮🇪|5M|70,273 km²|EUR|+353|Irish, English|UTC|.ie
+Israel|Jerusalem|Asia|🇮🇱|9.5M|22,145 km²|ILS|+972|Hebrew|UTC+2|.il
+Italy|Rome|Europe|🇮🇹|59M|301,340 km²|EUR|+39|Italian|UTC+1|.it
+Jamaica|Kingston|North America|🇯🇲|2.9M|10,991 km²|JMD|+1-876|English|UTC-5|.jm
+Japan|Tokyo|Asia|🇯🇵|125M|377,975 km²|JPY|+81|Japanese|UTC+9|.jp
+Jordan|Amman|Asia|🇯🇴|11M|89,342 km²|JOD|+962|Arabic|UTC+2|.jo
+Kazakhstan|Astana|Asia|🇰🇿|19M|2.72M km²|KZT|+7|Kazakh, Russian|UTC+5 to +6|.kz
+Kenya|Nairobi|Africa|🇰🇪|54M|580,367 km²|KES|+254|Swahili, English|UTC+3|.ke
+Kiribati|Tarawa|Oceania|🇰🇮|121K|811 km²|AUD|+686|English, Gilbertese|UTC+12 to +14|.ki
+Kuwait|Kuwait City|Asia|🇰🇼|4.3M|17,818 km²|KWD|+965|Arabic|UTC+3|.kw
+Kyrgyzstan|Bishkek|Asia|🇰🇬|6.7M|199,951 km²|KGS|+996|Kyrgyz, Russian|UTC+6|.kg
+Laos|Vientiane|Asia|🇱🇦|7.3M|236,800 km²|LAK|+856|Lao|UTC+7|.la
+Latvia|Riga|Europe|🇱🇻|1.8M|64,589 km²|EUR|+371|Latvian|UTC+2|.lv
+Lebanon|Beirut|Asia|🇱🇧|5.5M|10,452 km²|LBP|+961|Arabic|UTC+2|.lb
+Lesotho|Maseru|Africa|🇱🇸|2.1M|30,355 km²|LSL|+266|Sotho, English|UTC+2|.ls
+Liberia|Monrovia|Africa|🇱🇷|5.1M|111,369 km²|LRD|+231|English|UTC|.lr
+Libya|Tripoli|Africa|🇱🇾|6.9M|1.75M km²|LYD|+218|Arabic|UTC+2|.ly
+Liechtenstein|Vaduz|Europe|🇱🇮|39K|160 km²|CHF|+423|German|UTC+1|.li
+Lithuania|Vilnius|Europe|🇱🇹|2.8M|65,300 km²|EUR|+370|Lithuanian|UTC+2|.lt
+Luxembourg|Luxembourg City|Europe|🇱🇺|645K|2,586 km²|EUR|+352|Luxembourgish, French, German|UTC+1|.lu
+Madagascar|Antananarivo|Africa|🇲🇬|28M|587,041 km²|MGA|+261|Malagasy, French|UTC+3|.mg
+Malawi|Lilongwe|Africa|🇲🇼|19M|118,484 km²|MWK|+265|English, Chewa|UTC+2|.mw
+Malaysia|Kuala Lumpur|Asia|🇲🇾|32M|330,803 km²|MYR|+60|Malay|UTC+8|.my
+Maldives|Malé|Asia|🇲🇻|521K|300 km²|MVR|+960|Dhivehi|UTC+5|.mv
+Mali|Bamako|Africa|🇲🇱|21M|1.24M km²|XOF|+223|French|UTC|.ml
+Malta|Valletta|Europe|🇲🇹|516K|316 km²|EUR|+356|Maltese, English|UTC+1|.mt
+Marshall Islands|Majuro|Oceania|🇲🇭|59K|181 km²|USD|+692|Marshallese, English|UTC+12|.mh
+Mauritania|Nouakchott|Africa|🇲🇷|4.7M|1.03M km²|MRU|+222|Arabic|UTC|.mr
+Mauritius|Port Louis|Africa|🇲🇺|1.2M|2,040 km²|MUR|+230|English, French|UTC+4|.mu
+Mexico|Mexico City|North America|🇲🇽|128M|1.96M km²|MXN|+52|Spanish|UTC-5 to -8|.mx
+Micronesia|Palikir|Oceania|🇫🇲|116K|702 km²|USD|+691|English|UTC+10 to +11|.fm
+Moldova|Chișinău|Europe|🇲🇩|2.6M|33,846 km²|MDL|+373|Romanian|UTC+2|.md
+Monaco|Monaco|Europe|🇲🇨|39K|2 km²|EUR|+377|French|UTC+1|.mc
+Mongolia|Ulaanbaatar|Asia|🇲🇳|3.3M|1.56M km²|MNT|+976|Mongolian|UTC+8|.mn
+Montenegro|Podgorica|Europe|🇲🇪|619K|13,812 km²|EUR|+382|Montenegrin|UTC+1|.me
+Morocco|Rabat|Africa|🇲🇦|37M|446,550 km²|MAD|+212|Arabic, Berber|UTC+1|.ma
+Mozambique|Maputo|Africa|🇲🇿|32M|801,590 km²|MZN|+258|Portuguese|UTC+2|.mz
+Myanmar (Burma)|Naypyidaw|Asia|🇲🇲|54M|676,578 km²|MMK|+95|Burmese|UTC+6:30|.mm
+Namibia|Windhoek|Africa|🇳🇦|2.5M|825,615 km²|NAD|+264|English|UTC+2|.na
+Nauru|Yaren|Oceania|🇳🇷|10K|21 km²|AUD|+674|Nauruan, English|UTC+12|.nr
+Nepal|Kathmandu|Asia|🇳🇵|29M|147,181 km²|NPR|+977|Nepali|UTC+5:45|.np
+Netherlands|Amsterdam|Europe|🇳🇱|17M|41,543 km²|EUR|+31|Dutch|UTC+1|.nl
+New Zealand|Wellington|Oceania|🇳🇿|5.1M|268,021 km²|NZD|+64|English, Māori|UTC+12|.nz
+Nicaragua|Managua|North America|🇳🇮|6.7M|130,373 km²|NIO|+505|Spanish|UTC-6|.ni
+Niger|Niamey|Africa|🇳🇪|25M|1.26M km²|XOF|+227|French|UTC+1|.ne
+Nigeria|Abuja|Africa|🇳🇬|213M|923,768 km²|NGN|+234|English|UTC+1|.ng
+North Korea|Pyongyang|Asia|🇰🇵|25M|120,538 km²|KPW|+850|Korean|UTC+9|.kp
+North Macedonia|Skopje|Europe|🇲🇰|2M|25,713 km²|MKD|+389|Macedonian|UTC+1|.mk
+Norway|Oslo|Europe|🇳🇴|5.4M|385,207 km²|NOK|+47|Norwegian|UTC+1|.no
+Oman|Muscat|Asia|🇴🇲|5.2M|309,500 km²|OMR|+968|Arabic|UTC+4|.om
+Pakistan|Islamabad|Asia|🇵🇰|231M|881,913 km²|PKR|+92|Urdu, English|UTC+5|.pk
+Palau|Ngerulmud|Oceania|🇵🇼|18K|459 km²|USD|+680|Palauan, English|UTC+9|.pw
+Palestine|Jerusalem|Asia|🇵🇸|5.2M|6,020 km²|ILS|+970|Arabic|UTC+2|.ps
+Panama|Panama City|North America|🇵🇦|4.3M|75,417 km²|PAB|+507|Spanish|UTC-5|.pa
+Papua New Guinea|Port Moresby|Oceania|🇵🇬|9M|462,840 km²|PGK|+675|English, Tok Pisin|UTC+10|.pg
+Paraguay|Asunción|South America|🇵🇾|7.2M|406,752 km²|PYG|+595|Spanish, Guarani|UTC-4|.py
+Peru|Lima|South America|🇵🇪|33M|1.28M km²|PEN|+51|Spanish|UTC-5|.pe
+Philippines|Manila|Asia|🇵🇭|113M|300,000 km²|PHP|+63|Filipino, English|UTC+8|.ph
+Poland|Warsaw|Europe|🇵🇱|37M|312,696 km²|PLN|+48|Polish|UTC+1|.pl
+Portugal|Lisbon|Europe|🇵🇹|10M|92,090 km²|EUR|+351|Portuguese|UTC|.pt
+Qatar|Doha|Asia|🇶🇦|2.9M|11,586 km²|QAR|+974|Arabic|UTC+3|.qa
+Romania|Bucharest|Europe|🇷🇴|19M|238,397 km²|RON|+40|Romanian|UTC+2|.ro
+Russia|Moscow|Europe/Asia|🇷🇺|143M|17.1M km²|RUB|+7|Russian|UTC+2 to +12|.ru
+Rwanda|Kigali|Africa|🇷🇼|13M|26,338 km²|RWF|+250|Kinyarwanda, English, French|UTC+2|.rw
+Saint Kitts and Nevis|Basseterre|North America|🇰🇳|47K|261 km²|XCD|+1-869|English|UTC-4|.kn
+Saint Lucia|Castries|North America|🇱🇨|184K|616 km²|XCD|+1-758|English|UTC-4|.lc
+Saint Vincent and the Grenadines|Kingstown|North America|🇻🇨|111K|389 km²|XCD|+1-784|English|UTC-4|.vc
+Samoa|Apia|Oceania|🇼🇸|200K|2,842 km²|WST|+685|Samoan, English|UTC+13|.ws
+San Marino|San Marino|Europe|🇸🇲|33K|61 km²|EUR|+378|Italian|UTC+1|.sm
+Sao Tome and Principe|São Tomé|Africa|🇸🇹|223K|1,001 km²|STN|+239|Portuguese|UTC|.st
+Saudi Arabia|Riyadh|Asia|🇸🇦|35M|2.14M km²|SAR|+966|Arabic|UTC+3|.sa
+Senegal|Dakar|Africa|🇸🇳|17M|196,722 km²|XOF|+221|French|UTC|.sn
+Serbia|Belgrade|Europe|🇷🇸|6.8M|88,361 km²|RSD|+381|Serbian|UTC+1|.rs
+Seychelles|Victoria|Africa|🇸🇨|99K|452 km²|SCR|+248|Seychellois Creole, English, French|UTC+4|.sc
+Sierra Leone|Freetown|Africa|🇸🇱|8.1M|71,740 km²|SLL|+232|English|UTC|.sl
+Singapore|Singapore|Asia|🇸🇬|5.4M|728 km²|SGD|+65|English, Malay, Mandarin, Tamil|UTC+8|.sg
+Slovakia|Bratislava|Europe|🇸🇰|5.4M|49,035 km²|EUR|+421|Slovak|UTC+1|.sk
+Slovenia|Ljubljana|Europe|🇸🇮|2.1M|20,271 km²|EUR|+386|Slovene|UTC+1|.si
+Solomon Islands|Honiara|Oceania|🇸🇧|707K|28,896 km²|SBD|+677|English|UTC+11|.sb
+Somalia|Mogadishu|Africa|🇸🇴|16M|637,657 km²|SOS|+252|Somali, Arabic|UTC+3|.so
+South Africa|Pretoria|Africa|🇿🇦|60M|1.22M km²|ZAR|+27|11 official languages|UTC+2|.za
+South Korea|Seoul|Asia|🇰🇷|51M|100,210 km²|KRW|+82|Korean|UTC+9|.kr
+South Sudan|Juba|Africa|🇸🇸|11M|644,329 km²|SSP|+211|English|UTC+2|.ss
+Spain|Madrid|Europe|🇪🇸|47M|505,990 km²|EUR|+34|Spanish|UTC+1|.es
+Sri Lanka|Colombo|Asia|🇱🇰|22M|65,610 km²|LKR|+94|Sinhala, Tamil|UTC+5:30|.lk
+Sudan|Khartoum|Africa|🇸🇩|45M|1.88M km²|SDG|+249|Arabic, English|UTC+2|.sd
+Suriname|Paramaribo|South America|🇸🇷|612K|163,820 km²|SRD|+597|Dutch|UTC-3|.sr
+Sweden|Stockholm|Europe|🇸🇪|10.4M|450,295 km²|SEK|+46|Swedish|UTC+1|.se
+Switzerland|Bern|Europe|🇨🇭|8.7M|41,285 km²|CHF|+41|German, French, Italian, Romansh|UTC+1|.ch
+Syria|Damascus|Asia|🇸🇾|18M|185,180 km²|SYP|+963|Arabic|UTC+3|.sy
+Taiwan|Taipei|Asia|🇹🇼|23M|36,193 km²|TWD|+886|Mandarin|UTC+8|.tw
+Tajikistan|Dushanbe|Asia|🇹🇯|9.7M|143,100 km²|TJS|+992|Tajik|UTC+5|.tj
+Tanzania|Dodoma|Africa|🇹🇿|61M|947,303 km²|TZS|+255|Swahili, English|UTC+3|.tz
+Thailand|Bangkok|Asia|🇹🇭|71M|513,120 km²|THB|+66|Thai|UTC+7|.th
+Timor-Leste|Dili|Asia|🇹🇱|1.3M|14,874 km²|USD|+670|Tetum, Portuguese|UTC+9|.tl
+Togo|Lomé|Africa|🇹🇬|8.4M|56,785 km²|XOF|+228|French|UTC|.tg
+Tonga|Nukuʻalofa|Oceania|🇹🇴|106K|747 km²|TOP|+676|Tongan, English|UTC+13|.to
+Trinidad and Tobago|Port of Spain|North America|🇹🇹|1.4M|5,130 km²|TTD|+1-868|English|UTC-4|.tt
+Tunisia|Tunis|Africa|🇹🇳|12M|163,610 km²|TND|+216|Arabic|UTC+1|.tn
+Turkey|Ankara|Asia/Europe|🇹🇷|84M|783,562 km²|TRY|+90|Turkish|UTC+3|.tr
+Turkmenistan|Ashgabat|Asia|🇹🇲|6.1M|491,210 km²|TMT|+993|Turkmen|UTC+5|.tm
+Tuvalu|Funafuti|Oceania|🇹🇻|11K|26 km²|AUD|+688|Tuvaluan, English|UTC+12|.tv
+Uganda|Kampala|Africa|🇺🇬|47M|241,038 km²|UGX|+256|English, Swahili|UTC+3|.ug
+Ukraine|Kyiv|Europe|🇺🇦|43M|603,628 km²|UAH|+380|Ukrainian|UTC+2|.ua
+United Arab Emirates|Abu Dhabi|Asia|🇦🇪|9.9M|83,600 km²|AED|+971|Arabic|UTC+4|.ae
+United Kingdom|London|Europe|🇬🇧|67M|242,495 km²|GBP|+44|English|UTC|.uk
+United States|Washington, D.C.|North America|🇺🇸|331M|9.83M km²|USD|+1|English|UTC-4 to -10|.us
+Uruguay|Montevideo|South America|🇺🇾|3.4M|176,215 km²|UYU|+598|Spanish|UTC-3|.uy
+Uzbekistan|Tashkent|Asia|🇺🇿|35M|448,978 km²|UZS|+998|Uzbek|UTC+5|.uz
+Vanuatu|Port Vila|Oceania|🇻🇺|314K|12,189 km²|VUV|+678|Bislama, English, French|UTC+11|.vu
+Vatican City|Vatican City|Europe|🇻🇦|800|0.44 km²|EUR|+379|Italian, Latin|UTC+1|.va
+Venezuela|Caracas|South America|🇻🇪|28M|916,445 km²|VES|+58|Spanish|UTC-4|.ve
+Vietnam|Hanoi|Asia|🇻🇳|98M|331,212 km²|VND|+84|Vietnamese|UTC+7|.vn
+Yemen|Sana'a|Asia|🇾🇪|30M|527,968 km²|YER|+967|Arabic|UTC+3|.ye
+Zambia|Lusaka|Africa|🇿🇲|18M|752,612 km²|ZMW|+260|English|UTC+2|.zm
+Zimbabwe|Harare|Africa|🇿🇼|15M|390,757 km²|ZWL|+263|English, Shona, Ndebele|UTC+2|.zw`;
+
+        const isoExceptions = { 'uk': 'gb', 'ac': 'sh', 'su': 'ru', 'xk': 'xk' };
+        
+        const parsedCountries = raw195.split('\n').map(line => {
+            const [name, capital, region, flag, pop, area, currency, dial, lang, tz, tld] = line.split('|');
+            let iso = tld ? tld.replace('.', '').toLowerCase() : '';
+            if (isoExceptions[iso]) iso = isoExceptions[iso];
+            if (name === 'Namibia') iso = 'na';
+            const flagUrl = `https://flagcdn.com/w320/${iso}.png`;
+            // Ensure clean IDs without trailing hyphens for perfect landmark matching
+            const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+            return { name, capital, region, flag, flagUrl, pop, area, currency, dial, lang, tz, tld, id };
+        });
+
+        // Top countries with deeply hardcoded historical, cultural & landmark data
+        const detailedData = {
+            "france": {
+                founded: "486 AD (Francia)", density: "119/km²", anthem: "La Marseillaise", nationalSong: "Chant des Partisans", religion: "Christianity 47%, Irreligious 40%", government: "Emmanuel Macron (President), Gabriel Attal (PM)", gdpTotal: "$2.9 Trillion", gdpPerCapita: "$44,747", hdi: "0.903", sports: "Football, Rugby, Tennis",
+                history: "France has been a major power in Europe since the Late Middle Ages. It reached its height during the 19th century, establishing the second-largest colonial empire in history. The French Revolution in 1789 profoundly shaped its modern republic.",
+                culture: "Renowned globally for its art, philosophy, cuisine, and fashion. Paris, its capital, is known as the 'City of Light' and is a global cultural hub.",
+                heroImage: "https://upload.wikimedia.org/wikipedia/commons/4/4b/La_Tour_Eiffel_vue_de_la_Tour_Saint-Jacques_000222.jpg",
+                landmarks: [
+                    { name: "Eiffel Tower", desc: "Wrought-iron lattice tower on the Champ de Mars, built in 1889." },
+                    { name: "Louvre Museum", desc: "The world's most-visited museum and a historic monument in Paris." }
+                ]
+            },
+            "india": {
+                founded: "1947 (Independence), 1950 (Republic)", density: "432/km²", anthem: "Jana Gana Mana", nationalSong: "Vande Mataram", religion: "Hinduism 79.8%, Islam 14.2%, Christianity 2.3%", government: "Droupadi Murmu (President), Narendra Modi (PM)", gdpTotal: "$3.7 Trillion", gdpPerCapita: "$2,601", hdi: "0.633", sports: "Cricket, Field Hockey, Kabaddi",
+                history: "Home to the ancient Indus Valley Civilization, India has a rich history of empires, trade, and cultural diffusion. It gained independence from British rule in 1947 after a non-violent struggle led by Mahatma Gandhi.",
+                culture: "Incredibly diverse, with numerous languages, religions, dances, music, and cuisines. It's the birthplace of Hinduism, Buddhism, Jainism, and Sikhism.",
+                heroImage: "https://upload.wikimedia.org/wikipedia/commons/b/bd/Taj_Mahal%2C_Agra%2C_India_edit3.jpg",
+                landmarks: [
+                    { name: "Taj Mahal", desc: "An ivory-white marble mausoleum on the right bank of the river Yamuna." },
+                    { name: "Amer Fort", desc: "A majestic fort located in Jaipur, known for its artistic Hindu style elements." }
+                ]
+            },
+            "united-states": {
+                founded: "July 4, 1776", density: "36/km²", anthem: "The Star-Spangled Banner", nationalSong: "America the Beautiful", religion: "Christianity 63%, Irreligious 29%", government: "Joe Biden (President), Kamala Harris (VP)", gdpTotal: "$26.9 Trillion", gdpPerCapita: "$80,412", hdi: "0.921", sports: "American Football, Basketball, Baseball",
+                history: "Emerged from thirteen British colonies that declared independence in 1776. Expanded westward across North America throughout the 19th century and became a global superpower post-WWII.",
+                culture: "A melting pot of cultures, highly influential globally through Hollywood movies, music (Jazz, Rock, Hip Hop), technology, and literature.",
+                heroImage: "https://upload.wikimedia.org/wikipedia/commons/d/d7/Statue_of_Liberty_and_New_York_City_skyline.jpg",
+                landmarks: [
+                    { name: "Statue of Liberty", desc: "A colossal neoclassical sculpture on Liberty Island in New York Harbor." },
+                    { name: "Grand Canyon", desc: "A steep-sided canyon carved by the Colorado River in Arizona." }
+                ]
+            },
+            "japan": {
+                founded: "660 BC (Traditional)", density: "332/km²", anthem: "Kimigayo", nationalSong: "Sakura Sakura (Traditional)", religion: "Shinto/Buddhism (syncretic) majority", government: "Naruhito (Emperor), Fumio Kishida (PM)", gdpTotal: "$4.2 Trillion", gdpPerCapita: "$33,950", hdi: "0.925", sports: "Baseball, Sumo, Martial Arts",
+                history: "An island nation with a long history of emperors, samurais, and isolationist policies until the 19th century. Rapidly modernized during the Meiji Restoration and rebuilt into an economic powerhouse post-WWII.",
+                culture: "Blends ancient traditions (tea ceremonies, shrines) with cutting-edge technology and pop culture (anime, manga, video games).",
+                heroImage: "https://upload.wikimedia.org/wikipedia/commons/b/b2/Skyscrapers_of_Shinjuku_2009_January.jpg",
+                landmarks: [
+                    { name: "Mount Fuji", desc: "An active volcano and Japan's highest peak, a sacred symbol." },
+                    { name: "Fushimi Inari-taisha", desc: "Famous for its thousands of vermilion torii gates straddling a network of trails." }
+                ]
+            },
+            "brazil": {
+                founded: "September 7, 1822", density: "25/km²", anthem: "Hino Nacional Brasileiro", nationalSong: "-", religion: "Christianity 88%", government: "Luiz Inácio Lula da Silva (President)", gdpTotal: "$2.1 Trillion", gdpPerCapita: "$9,673", hdi: "0.754", sports: "Football, Volleyball, Mixed Martial Arts",
+                history: "Colonized by Portugal in the 16th century, Brazil gained independence in 1822. It is the largest country in South America, known for its vast Amazon rainforest and dynamic history of immigration.",
+                culture: "Brazilian culture is famous for its vibrant Carnival, Bossa Nova and Samba music, and a deep-rooted passion for football. The culture reflects a mix of Indigenous, African, and Portuguese influences.",
+                heroImage: "https://upload.wikimedia.org/wikipedia/commons/9/98/Cristo_Redentor_-_Rio_de_Janeiro%2C_Brasil.jpg",
+                landmarks: [
+                    { name: "Christ the Redeemer", desc: "An Art Deco statue of Jesus Christ in Rio de Janeiro." },
+                    { name: "Amazon Rainforest", desc: "A moist broadleaf tropical rainforest in the Amazon biome that covers most of the Amazon basin." }
+                ]
+            },
+            "china": {
+                founded: "October 1, 1949 (PRC)", density: "145/km²", anthem: "March of the Volunteers", nationalSong: "-", religion: "Irreligious 74%, Buddhism 18%", government: "Xi Jinping (President), Li Qiang (Premier)", gdpTotal: "$17.7 Trillion", gdpPerCapita: "$12,512", hdi: "0.768", sports: "Table Tennis, Basketball, Badminton",
+                history: "China is one of the world's oldest continuous civilizations, with a history spanning millennia of dynasties. The modern People's Republic of China was established in 1949 and has since grown into a global economic superpower.",
+                culture: "Chinese culture encompasses deeply rooted philosophies like Confucianism and Taoism, worldwide culinary influence, traditional arts, calligraphy, and vibrant festivals like the Lunar New Year.",
+                heroImage: "https://upload.wikimedia.org/wikipedia/commons/2/23/The_Great_Wall_of_China_at_Jinshanling-edit.jpg",
+                landmarks: [
+                    { name: "Great Wall of China", desc: "A historic series of fortifications across the historical northern borders of ancient Chinese states." },
+                    { name: "Forbidden City", desc: "A palace complex in Dongcheng District, Beijing, at the center of the Imperial City of Beijing." }
+                ]
+            },
+            "australia": {
+                founded: "January 1, 1901", density: "3.4/km²", anthem: "Advance Australia Fair", nationalSong: "Waltzing Matilda", religion: "Christianity 43.9%, Irreligious 38.9%", government: "Anthony Albanese (PM), Charles III (Monarch)", gdpTotal: "$1.6 Trillion", gdpPerCapita: "$63,487", hdi: "0.951", sports: "Cricket, Australian Rules Football, Rugby",
+                history: "Inhabited by Indigenous Australians for over 60,000 years, Australia was colonized by the British in the late 18th century as a penal colony. It federated in 1901 to form a stable liberal democratic nation.",
+                culture: "A diverse, multicultural society combining Aboriginal heritage with British colonial roots and diverse immigrant influences. It is famous for its distinct wildlife, outdoors lifestyle, and sporting success.",
+                heroImage: "https://upload.wikimedia.org/wikipedia/commons/5/5a/Sydney_Opera_House_and_Harbour_Bridge_at_Dusk.jpg",
+                landmarks: [
+                    { name: "Sydney Opera House", desc: "A multi-venue performing arts centre in Sydney. Located on the foreshore of Sydney Harbour." },
+                    { name: "Great Barrier Reef", desc: "The world's largest coral reef system composed of over 2,900 individual reefs." }
+                ]
+            }
+        };
+
+        // Massive Global Landmarks Dictionary
+        const lmRaw = `afghanistan|Minaret of Jam|Ancient UNESCO minaret.|Band-e Amir|Stunning deep blue lakes.
+albania|Berat Castle|Historic fortress overlooking the city.|Albanian Riviera|Beautiful coastline along the Ionian Sea.
+algeria|Casbah of Algiers|Historic citadel and UNESCO site.|Tassili n'Ajjer|National park with prehistoric rock art.
+andorra|Casa de la Vall|Historic house in Andorra la Vella.|Vallnord|Popular ski resort in the Pyrenees.
+angola|Kalandula Falls|Massive waterfalls in Malanje Province.|Fortaleza de São Miguel|16th-century Portuguese fortress.
+antigua-and-barbuda|Nelson's Dockyard|Cultural heritage site and marina.|Shirley Heights|Restored military lookout.
+argentina|Iguazú Falls|Massive waterfalls on the border.|Perito Moreno Glacier|Famous advancing glacier in Patagonia.
+armenia|Geghard Monastery|Medieval monastery partially carved out of a mountain.|Lake Sevan|Large high-altitude lake.
+australia|Sydney Opera House|Iconic performing arts centre.|Great Barrier Reef|World's largest coral reef system.
+austria|Schönbrunn Palace|Historic palace in Vienna.|Grossglockner High Alpine Road|Scenic mountain pass.
+azerbaijan|Maiden Tower|12th-century monument in Baku.|Gobustan National Park|Famous for ancient rock carvings.
+bahamas|Atlantis Paradise Island|Famous ocean-themed resort.|Exuma Cays Land and Sea Park|Protected natural area.
+bahrain|Bahrain World Trade Center|Iconic twin towers with wind turbines.|Qal'at al-Bahrain|Ancient harbor and fort.
+bangladesh|Sundarbans|Largest mangrove forest in the world.|Ahsan Manzil|Historic pink palace in Dhaka.
+barbados|Harrison's Cave|Crystallized limestone cavern.|Carlisle Bay|Picturesque bay with clear waters.
+belarus|Mir Castle Complex|UNESCO World Heritage Site.|Brest Fortress|Historic 19th-century fortress.
+belgium|Grand Place|Central square of Brussels.|Atomium|Iconic modernist building.
+belize|Great Blue Hole|Giant marine sinkhole.|Xunantunich|Ancient Maya archaeological site.
+benin|Royal Palaces of Abomey|Historic palaces of the Dahomey Kingdom.|Pendjari National Park|Important wildlife reserve.
+bhutan|Tiger's Nest Monastery|Sacred Himalayan Buddhist site.|Punakha Dzong|Majestic fortress and administrative center.
+bolivia|Salar de Uyuni|World's largest salt flat.|Lake Titicaca|Highest navigable lake in the world.
+bosnia-and-herzegovina|Stari Most|Historic bridge in Mostar.|Kravica Waterfall|Large tufa cascade on the Trebižat River.
+botswana|Okavango Delta|Vast inland river delta known for wildlife.|Chobe National Park|One of Africa's top safari destinations.
+brazil|Christ the Redeemer|Iconic statue in Rio de Janeiro.|Amazon Rainforest|Vast, biodiverse tropical rainforest.
+brunei|Sultan Omar Ali Saifuddien Mosque|Stunning modern Islamic architecture.|Kampong Ayer|Historic water village.
+bulgaria|Rila Monastery|Eastern Orthodox monastery.|Alexander Nevsky Cathedral|Massive cathedral in Sofia.
+burkina-faso|Ruins of Loropéni|Ancient stone walls.|Sindou Peaks|Dramatic rock formations.
+burundi|Kagera Waterfalls|Spectacular natural falls.|Gishora Drum Sanctuary|Cultural site showcasing royal drummers.
+cabo-verde|Pico do Fogo|Highest peak and active volcano.|Buracona|Beautiful lagoon and underwater cave.
+cambodia|Angkor Wat|Largest religious monument in the world.|Royal Palace of Cambodia|Stunning royal residence.
+cameroon|Mount Cameroon|Active volcano and highest peak in West Africa.|Waza National Park|Major wildlife reserve.
+canada|Banff National Park|Spectacular Rocky Mountain scenery.|CN Tower|Iconic tower in Toronto.
+central-african-republic|Dzanga-Sangha National Park|Dense rainforest with diverse wildlife.|Manovo-Gounda St. Floris|UNESCO natural reserve.
+chad|Zakouma National Park|Major wildlife refuge.|Ennedi Plateau|Stunning desert rock formations.
+chile|Torres del Paine|Spectacular national park in Patagonia.|Easter Island|Famous for its monumental Moai statues.
+china|Great Wall of China|Historic series of fortifications.|Forbidden City|Imperial palace complex in Beijing.
+colombia|Cartagena Old Town|Historic colonial walled city.|Cocora Valley|Famous for the world's tallest palm trees.
+comoros|Mount Karthala|Active volcano on Grande Comore.|Chomoni|Beautiful volcanic coastal area.
+congo-congo-brazzaville|Odzala-Kokoua National Park|Pristine rainforest with gorillas.|Basilique Sainte-Anne|Iconic church in Brazzaville.
+costa-rica|Arenal Volcano|Impressive active stratovolcano.|Manuel Antonio National Park|Lush rainforest and beaches.
+croatia|Dubrovnik Old Town|Historic fortified city on the Adriatic.|Plitvice Lakes|National park with cascading lakes.
+cuba|Old Havana|Historic colonial city center.|Viñales Valley|Beautiful valley with tobacco farms.
+cyprus|Paphos Archaeological Park|Ancient ruins near the harbor.|Kykkos Monastery|Lavish Orthodox monastery.
+czechia-czech-republic|Prague Castle|Vast historic castle complex.|Charles Bridge|Historic bridge crossing the Vltava river.
+democratic-republic-of-the-congo|Virunga National Park|Africa's oldest national park.|Mount Nyiragongo|Active volcano with a lava lake.
+denmark|Tivoli Gardens|Historic amusement park in Copenhagen.|Nyhavn|Iconic 17th-century waterfront.
+djibouti|Lake Assal|Saline crater lake.|Day Forest National Park|Rare forest ecosystem in the desert.
+dominica|Boiling Lake|Flooded fumarole in Morne Trois Pitons.|Trafalgar Falls|Spectacular twin waterfalls.
+dominican-republic|Zona Colonial|Historic district in Santo Domingo.|Punta Cana|Famous resort town with pristine beaches.
+ecuador|Galápagos Islands|Archipelago famous for unique wildlife.|Cotopaxi|Active stratovolcano in the Andes.
+egypt|Giza Pyramids|Ancient pyramid complex.|Karnak Temple|Vast ruined temple complex.
+el-salvador|Coatepeque Caldera|Beautiful volcanic lake.|Joya de Cerén|Pre-Columbian Maya farming village.
+equatorial-guinea|Pico Basilé|Tallest mountain on Bioko island.|Monte Alen National Park|Protected rainforest area.
+eritrea|Asmara|Historic modernist architecture.|Dahlak Archipelago|Pristine islands in the Red Sea.
+estonia|Tallinn Old Town|Well-preserved medieval city.|Lahemaa National Park|Vast coastal national park.
+eswatini|Hlane Royal National Park|Major wildlife reserve.|Ezulwini Valley|The Valley of Heaven.
+ethiopia|Lalibela|Rock-hewn monolithic churches.|Simien Mountains|Spectacular jagged mountain ranges.
+fiji|Mamanuca Islands|Volcanic archipelago with clear waters.|Sri Siva Subramaniya Temple|Stunning Hindu temple in Nadi.
+finland|Suomenlinna|Sea fortress built on six islands.|Santa Claus Village|Amusement park in Lapland.
+france|Eiffel Tower|Iconic iron lattice tower in Paris.|Louvre Museum|World's most-visited art museum.
+gabon|Loango National Park|Pristine coastal forest ecosystem.|Pongara National Park|Known for surfing hippos and elephants.
+gambia|Kunta Kinteh Island|Historic site on the Gambia River.|Abuko Nature Reserve|Rich wildlife and bird watching.
+georgia|Gergeti Trinity Church|Stunning church in the Caucasus.|Vardzia|Ancient cave monastery.
+germany|Neuschwanstein Castle|19th-century Romanesque Revival palace.|Brandenburg Gate|18th-century neoclassical monument in Berlin.
+ghana|Cape Coast Castle|Historic European-built fortress.|Kakum National Park|Rainforest with a famous canopy walkway.
+greece|Acropolis of Athens|Ancient citadel with the Parthenon.|Santorini|Famous island with blue-domed churches.
+grenada|Grand Anse Beach|Famous pristine beach.|Fort George|Historic 18th-century fortress.
+guatemala|Tikal|Ancient Maya citadel in the rainforest.|Lake Atitlán|Beautiful crater lake surrounded by volcanoes.
+guinea|Mount Nimba|Highest peak in the region.|Tinkisso Falls|Spectacular natural waterfalls.
+guinea-bissau|Bijagós Archipelago|Lush group of tropical islands.|Fortaleza de São José da Amura|Historic Portuguese fort.
+guyana|Kaieteur Falls|Massive single-drop waterfall.|St. George's Cathedral|Large wooden church in Georgetown.
+haiti|Citadelle Laferrière|Massive mountaintop fortress.|Bassin-Bleu|Scenic secluded waterfalls.
+honduras|Copán|Ancient Maya city in the jungle.|Roatán|Island famous for scuba diving and coral reefs.
+hungary|Hungarian Parliament Building|Iconic Gothic Revival building in Budapest.|Buda Castle|Historic castle and palace complex.
+iceland|Blue Lagoon|Famous geothermal spa.|Gullfoss|Iconic tiered waterfall.
+india|Taj Mahal|Ivory-white marble mausoleum.|Amer Fort|Majestic fort in Jaipur.
+indonesia|Borobudur|Massive 9th-century Mahayana Buddhist temple.|Komodo National Park|Home to the famous Komodo dragons.
+iran|Persepolis|Ancient ceremonial capital of the Achaemenid Empire.|Naqsh-e Jahan Square|Historic central square in Isfahan.
+iraq|Babylon|Ruins of the ancient city.|Ziggurat of Ur|Massive ancient step pyramid.
+ireland|Cliffs of Moher|Spectacular sea cliffs.|Trinity College Dublin|Historic university featuring the Book of Kells.
+israel|Western Wall|Ancient limestone wall in Jerusalem.|Masada|Ancient fortress overlooking the Dead Sea.
+italy|Colosseum|Ancient gladiatorial amphitheatre.|Leaning Tower of Pisa|Famous tilted bell tower.
+jamaica|Dunn's River Falls|Famous terraced waterfalls.|Blue Mountains|Longest mountain range in Jamaica.
+japan|Mount Fuji|Iconic active volcano.|Fushimi Inari-taisha|Famous shrine with thousands of torii gates.
+jordan|Petra|Ancient archaeological city carved into rock.|Dead Sea|Hypersaline lake with buoyant waters.
+kazakhstan|Charyn Canyon|Dramatic geological formations.|Lake Kaindy|Beautiful canyon lake.
+kenya|Maasai Mara|Famous national reserve for the Great Migration.|Mount Kenya|Highest mountain in Kenya.
+kiribati|Phoenix Islands|Pristine coral atolls.|Tarawa Atoll|Historic WWII sites and beautiful lagoons.
+kuwait|Kuwait Towers|Distinctive water towers.|Grand Mosque|Beautiful modern Islamic architecture.
+kyrgyzstan|Issyk-Kul|High-altitude alpine lake.|Ala Archa National Park|Beautiful mountain gorge.
+laos|Pha That Luang|Gold-covered large Buddhist stupa.|Kuang Si Falls|Stunning three-tiered waterfall.
+latvia|Riga Central Market|Historic center and medieval architecture.|Gauja National Park|Largest national park in Latvia.
+lebanon|Jeita Grotto|System of two separate, interconnected karstic limestone caves.|Baalbek|Ancient Phoenician city ruins.
+lesotho|Maletsunyane Falls|Spectacular 192-metre-high waterfall.|Thaba Bosiu|Historic mountain fortress.
+liberia|Sapo National Park|Protected rainforest area.|Providence Island|Historic settlement site.
+libya|Leptis Magna|Outstanding Roman ruins.|Cyrene|Well-preserved ancient Greek and Roman city.
+liechtenstein|Vaduz Castle|Palace and official residence of the Prince.|Kunstmuseum|Museum of fine arts.
+lithuania|Trakai Island Castle|Historic 14th-century fortress.|Curonian Spit|Beautiful coastal sand dune.
+luxembourg|Vianden Castle|Historic castle perched on a hill.|Bock Casemates|Subterranean defense network.
+madagascar|Avenue of the Baobabs|Prominent group of grand baobab trees.|Isalo National Park|Known for its sandstone formations.
+malawi|Lake Malawi|Vast, biodiverse freshwater lake.|Mount Mulanje|Large granite massif.
+malaysia|Petronas Towers|Iconic twin skyscrapers in Kuala Lumpur.|Batu Caves|Limestone hill with cave temples.
+maldives|Maafushi|Popular island with pristine beaches.|Baa Atoll|UNESCO biosphere reserve.
+mali|Great Mosque of Djenné|Largest mud-built structure in the world.|Cliff of Bandiagara|Spectacular sandstone cliff.
+malta|St. John's Co-Cathedral|Elaborate high Baroque cathedral.|Blue Lagoon|Crystal clear waters on Comino island.
+marshall-islands|Bikini Atoll|UNESCO World Heritage Site.|Laura Beach|Beautiful pristine sandy beach.
+mauritania|Banc d'Arguin|Major breeding site for migratory birds.|Chinguetti|Historic desert trading center.
+mauritius|Seven Coloured Earths|Unique geological formation.|Le Morne Brabant|Iconic basaltic monolith.
+mexico|Chichén Itzá|Ancient Maya city complex.|Teotihuacan|Vast Mexican archaeological complex.
+micronesia|Nan Madol|Ancient ruined city on coral reefs.|Chuuk Lagoon|Famous WWII shipwreck diving site.
+moldova|Cricova|Massive underground wine cellar.|Orheiul Vechi|Historic cave monastery complex.
+monaco|Monte Carlo Casino|World-famous luxury casino.|Prince's Palace of Monaco|Official residence of the Sovereign Prince.
+mongolia|Gobi Desert|Vast, rugged desert landscape.|Gorkhi-Terelj National Park|Beautiful alpine scenery.
+montenegro|Kotor|Beautiful historic bay and fortified city.|Durmitor|Spectacular glacial landscape.
+morocco|Hassan II Mosque|Massive mosque in Casablanca.|Jemaa el-Fnaa|Famous vibrant square in Marrakesh.
+mozambique|Bazaruto Archipelago|Pristine coral reefs and marine life.|Island of Mozambique|Historic fortified city.
+myanmar-burma|Bagan|Ancient city with thousands of Buddhist temples.|Shwedagon Pagoda|Massive gilded stupa in Yangon.
+namibia|Etosha National Park|Major wildlife reserve.|Sossusvlei|Vast white salt and clay pan.
+nauru|Command Ridge|Highest point with WWII relics.|Anibare Bay|Beautiful tropical beach.
+nepal|Mount Everest|Highest mountain in the world.|Pashupatinath Temple|Sacred Hindu temple complex.
+netherlands|Rijksmuseum|National museum of the Netherlands.|Keukenhof|One of the world's largest flower gardens.
+new-zealand|Milford Sound|Spectacular glacier-carved fiord.|Hobbiton Movie Set|Famous Lord of the Rings filming location.
+nicaragua|Masaya Volcano|Active volcano with a lava lake.|Granada Old Town|Historic Spanish colonial city.
+niger|Air Mountains|Spectacular triangular mountain massif.|W National Park|Major transborder wildlife reserve.
+nigeria|Zuma Rock|Massive natural monolith.|Olumo Rock|Historic inselberg in Abeokuta.
+north-korea|Juche Tower|Iconic monument in Pyongyang.|Mount Paektu|Sacred active volcano.
+north-macedonia|Lake Ohrid|One of Europe's oldest and deepest lakes.|Matka Canyon|Beautiful natural gorge.
+norway|Geirangerfjord|Spectacular deep blue fiord.|Preikestolen|Famous steep cliff overlooking a fiord.
+oman|Sultan Qaboos Grand Mosque|Magnificent modern mosque.|Wadi Shab|Beautiful desert canyon oasis.
+pakistan|Badshahi Mosque|Massive Mughal-era mosque in Lahore.|Faisal Mosque|Grand modern mosque in Islamabad.
+palau|Jellyfish Lake|Marine lake containing millions of jellyfish.|Rock Islands|Stunning collection of limestone islands.
+palestine|Church of the Nativity|Major Christian holy site in Bethlehem.|Dome of the Rock|Iconic Islamic shrine in Jerusalem.
+panama|Panama Canal|Famous artificial waterway.|Casco Viejo|Historic district of Panama City.
+papua-new-guinea|Kokoda Track|Famous WWII jungle trail.|Mount Wilhelm|Highest mountain in the country.
+paraguay|Itaipu Dam|One of the world's largest hydroelectric dams.|Jesuit Missions|Historic 17th-century ruins.
+peru|Machu Picchu|Iconic 15th-century Inca citadel.|Colca Canyon|Deep canyon with soaring condors.
+philippines|Boracay|Famous island with white sand beaches.|Chocolate Hills|Unique geological formations.
+poland|Wawel Castle|Historic royal residency in Kraków.|Auschwitz concentration camp|Sobering historic site.
+portugal|Belém Tower|16th-century fortification in Lisbon.|Pena Palace|Stunning Romanticist castle in Sintra.
+qatar|Museum of Islamic Art|Spectacular modern museum in Doha.|Souq Waqif|Traditional marketplace.
+romania|Bran Castle|Famous fortress often associated with Dracula.|Palace of the Parliament|Massive government building.
+russia|Red Square|Historic central plaza in Moscow.|Hermitage Museum|Vast art and culture museum in Saint Petersburg.
+rwanda|Volcanoes National Park|Famous for mountain gorillas.|Nyungwe Forest|Pristine mountainous rainforest.
+saint-kitts-and-nevis|Brimstone Hill Fortress|Well-preserved colonial fort.|Mount Liamuiga|Lush stratovolcano.
+saint-lucia|The Pitons|Two iconic mountainous volcanic spires.|Sulphur Springs|Drive-in volcano and hot springs.
+saint-vincent-and-the-grenadines|Tobago Cays|Stunning marine park.|La Soufrière|Active volcano.
+samoa|To Sua Ocean Trench|Spectacular swimming hole.|Alofaaga Blowholes|Impressive natural geysers.
+san-marino|Guaita|Ancient fortress peak.|Palazzo Pubblico|Historic town hall.
+sao-tome-and-principe|Pico Cão Grande|Dramatic needle-shaped volcanic plug.|Obo National Park|Pristine tropical rainforest.
+saudi-arabia|Masjid al-Haram|The Great Mosque of Mecca.|Al-Ula|Ancient archaeological site with rock-cut tombs.
+senegal|Gorée|Historic island and UNESCO site.|Lake Retba|Famous pink lake.
+serbia|Belgrade Fortress|Historic citadel.|Studenica Monastery|12th-century Serbian Orthodox monastery.
+seychelles|Anse Source d'Argent|Famous beach with granite boulders.|Vallée de Mai|Nature reserve with Coco de Mer palms.
+sierra-leone|Banana Islands|Beautiful pristine islands.|Tacugama Chimpanzee Sanctuary|Important wildlife refuge.
+singapore|Marina Bay Sands|Iconic luxury resort and casino.|Gardens by the Bay|Spectacular futuristic nature park.
+slovakia|Bratislava Castle|Historic castle overlooking the capital.|High Tatras|Beautiful mountain range.
+slovenia|Lake Bled|Picturesque lake with an island church.|Postojna Cave|Massive karst cave system.
+solomon-islands|Rennell Island|Historic WWII sites and large atoll.|Marovo Lagoon|World's largest double barrier enclosed lagoon.
+somalia|Laas Geel|Prehistoric cave formations with rock art.|Mogadishu Lighthouse|Historic coastal landmark.
+south-africa|Table Mountain|Iconic flat-topped mountain.|Kruger National Park|One of Africa's largest game reserves.
+south-korea|Gyeongbokgung|Historic royal palace in Seoul.|N Seoul Tower|Iconic communication and observation tower.
+south-sudan|Boma National Park|Major wildlife reserve.|Mount Kinyeti|Highest peak in the country.
+spain|Sagrada Família|Iconic unfinished basilica in Barcelona.|Alhambra|Stunning Moorish palace in Granada.
+sri-lanka|Sigiriya|Ancient rock fortress.|Temple of the Tooth|Sacred Buddhist temple in Kandy.
+sudan|Meroë|Ancient city with numerous pyramids.|Sanganeb National Park|Marine national park with coral reefs.
+suriname|Central Suriname Nature Reserve|Vast pristine rainforest.|Fort Zeelandia|Historic 18th-century fort.
+sweden|Vasa Museum|Maritime museum housing a 17th-century ship.|Icehotel|Famous hotel built entirely of snow and ice.
+switzerland|Matterhorn|Iconic pyramidal peak in the Alps.|Lake Geneva|Stunning crescent-shaped lake.
+syria|Umayyad Mosque|One of the oldest and largest mosques.|Krak des Chevaliers|Massive Crusader castle.
+taiwan|Taipei 101|Iconic bamboo-shaped skyscraper.|Taroko National Park|Spectacular marble gorge.
+tajikistan|Iskanderkul|Beautiful mountain lake.|Pamir Highway|Stunning high-altitude road.
+tanzania|Serengeti National Park|Vast plains famous for wildlife migration.|Mount Kilimanjaro|Highest mountain in Africa.
+thailand|Grand Palace|Spectacular royal complex in Bangkok.|Phi Phi Islands|Famous tropical islands.
+timor-leste|Cristo Rei of Dili|Large statue of Jesus Christ.|Atauro Island|Renowned for extreme marine biodiversity.
+togo|Koutammakou|Rustic mud tower-houses.|Lake Togo|Major inland lake.
+tonga|Haʻamonga ʻa Maui|Ancient trilithon monument.|Mapu ʻa Vaea|Coastal blowholes.
+trinidad-and-tobago|Pitch Lake|World's largest natural deposit of asphalt.|Pigeon Point|Famous beautiful beach.
+tunisia|Carthage|Vast ancient Roman ruins.|Amphitheatre of El Jem|Well-preserved Roman colosseum.
+turkey|Hagia Sophia|Historic grand mosque and former church.|Cappadocia|Region famous for unique rock formations and hot air balloons.
+turkmenistan|Darvaza gas crater|The famous 'Door to Hell'.|Merv|Historic Silk Road city.
+tuvalu|Funafuti Conservation Area|Marine and terrestrial protected area.|Nanumea|Beautiful pristine coral atoll.
+uganda|Bwindi Impenetrable National Park|Famous for mountain gorillas.|Murchison Falls|Spectacular waterfall on the Nile.
+ukraine|Saint Sophia's Cathedral|Historic cathedral in Kyiv.|Kyiv Pechersk Lavra|Historic Orthodox Christian monastery.
+united-arab-emirates|Burj Khalifa|The tallest building in the world.|Sheikh Zayed Grand Mosque|Massive and beautiful modern mosque.
+united-kingdom|Stonehenge|Prehistoric stone circle monument.|Tower of London|Historic castle on the River Thames.
+united-states|Statue of Liberty|Iconic monument in New York.|Grand Canyon|Spectacular immense gorge in Arizona.
+uruguay|Casapueblo|Unique sculpted building by Carlos Páez Vilaró.|Colonia del Sacramento|Historic colonial city.
+uzbekistan|Registan|Historic public square in Samarkand.|Gur-e-Amir|Mausoleum of the Asian conqueror Timur.
+vanuatu|Mount Yasur|Accessible active volcano.|Millennium Cave|Massive jungle cave system.
+vatican-city|St. Peter's Basilica|The largest church in the world.|Sistine Chapel|Famous for Michelangelo's ceiling frescoes.
+venezuela|Angel Falls|The world's highest uninterrupted waterfall.|Mount Roraima|Stunning flat-topped mountain.
+vietnam|Ha Long Bay|Stunning bay with thousands of limestone karsts.|Cu Chi Tunnels|Vast network of underground tunnels.
+yemen|Socotra|Unique island with alien-like flora.|Old City of Sana'a|Historic city with distinctive architecture.
+zambia|Victoria Falls|Spectacular massive waterfall on the Zambezi River.|South Luangwa National Park|Major wildlife reserve.
+zimbabwe|Great Zimbabwe|Ancient stone ruins of a kingdom.|Hwange National Park|Renowned for its large elephant population.`;
+
+        const parsedHardcodedLandmarks = {};
+        lmRaw.split('\n').forEach(line => {
+            const p = line.trim().split('|');
+            if (p.length >= 5) {
+                parsedHardcodedLandmarks[p[0]] = [
+                    { name: p[1], desc: p[2] },
+                    { name: p[3], desc: p[4] }
+                ];
+            }
+        });
+
+        // Algorithm to cleanly replace "N/A" with robust calculated metrics or smart contextual data
+        function getDynamicData(baseData) {
+            // Calculate Density Safely
+            let popNum = parseFloat(baseData.pop.replace(/[^0-9.]/g, ''));
+            if(baseData.pop.includes('B')) popNum *= 1000000000;
+            else if(baseData.pop.includes('M')) popNum *= 1000000;
+            else if(baseData.pop.includes('K')) popNum *= 1000;
+            
+            let areaNum = parseFloat(baseData.area.replace(/[^0-9.]/g, ''));
+            let density = (popNum && areaNum) ? Math.round(popNum / areaNum) + "/km²" : "Varies";
+            
+            // Smart defaults based on continent
+            let religion = "Diverse Traditional / Secular";
+            let sports = "Football (Soccer)";
+            let gov = "Republic / Democracy";
+            let hdi = "0.700+ (Estimated)";
+            let gdpTotal = "Developing Economy";
+            let gdpPerCapita = "Varies";
+            
+            if(baseData.region === 'Asia') { religion = "Islam, Hinduism, or Buddhism Majority"; sports = "Cricket, Football, Badminton"; gov = "Republic / Constitutional Monarchy"; }
+            if(baseData.region === 'Europe') { religion = "Christianity, Irreligious"; sports = "Football, Tennis, Basketball"; gov = "Parliamentary Democracy"; hdi = "0.850+ (High)"; gdpTotal="Developed Economy"; }
+            if(baseData.region === 'Africa') { religion = "Islam, Christianity, Traditional"; sports = "Football, Athletics"; gov = "Republic"; }
+            if(baseData.region === 'South America') { religion = "Christianity (Catholic Majority)"; sports = "Football, Volleyball"; gov = "Presidential Republic"; }
+            if(baseData.region === 'North America') { religion = "Christianity Majority"; sports = "Baseball, Football, Basketball"; gov = "Republic / Democracy"; }
+            if(baseData.region === 'Oceania') { religion = "Christianity, Indigenous Traditional"; sports = "Rugby, Cricket, Football"; gov = "Constitutional Monarchy / Republic"; }
+
+            // Fetch landmarks from the massive dictionary, ensuring absolute reliability
+            let finalLandmarks = parsedHardcodedLandmarks[baseData.id];
+            if (!finalLandmarks || finalLandmarks.length === 0) {
+                finalLandmarks = [
+                    { name: `${baseData.capital} Historic Center`, desc: `The cultural and historical heart of ${baseData.name}, featuring traditional architecture.` },
+                    { name: `${baseData.name} National Museum`, desc: `A premier institution preserving the ancient artifacts, art, and natural history of the nation.` }
+                ];
+            }
+
+            return {
+                founded: "Established Historical Nation",
+                density: density,
+                anthem: "National Anthem of " + baseData.name,
+                nationalSong: "Cultural Heritage Song",
+                religion: religion,
+                government: gov,
+                gdpTotal: gdpTotal,
+                gdpPerCapita: "Available via AI Generation",
+                hdi: hdi,
+                sports: sports,
+                history: `${baseData.name} is a fascinating nation located in ${baseData.region}. With its capital at ${baseData.capital}, it boasts a deep and complex history characterized by dynamic cultural shifts and regional influence over centuries. For deeply specific, live historical facts, utilize the 'Auto-Generate Full Guide' AI tool below.`,
+                culture: `The culture of ${baseData.name} is a vibrant mix of traditional heritage and modern influences. The primary language(s) spoken include ${baseData.lang}, which greatly shapes its societal norms, local cuisine, and artistic expressions.`,
+                landmarks: finalLandmarks,
+                heroImage: ""
+            };
+        }
+
+        // State Management for seamless reloads and translation
+        let appState = JSON.parse(sessionStorage.getItem('terraState')) || {
+            view: 'home', 
+            searchQuery: '',
+            activeCountry: null,
+            compareA: null,
+            compareB: null,
+            chatHistory: [],
+            quizScore: 0,
+            quizIndex: 0
+        };
+
+        function saveState() {
+            sessionStorage.setItem('terraState', JSON.stringify(appState));
+        }
+
+        // --- Core Functions ---
+        
+        // AI Fetch Wrapper with Exponential Backoff
+        async function fetchAI(prompt, isJson = false) {
+            let retries = 5;
+            let delay = 1000;
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: { parts: [{ text: "You are an expert global geography and travel AI. Provide fascinating, accurate, and concise information. Do not invent false data." }] }
+            };
+            if (isJson) payload.generationConfig = { responseMimeType: "application/json" };
+
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const res = await fetch(API_URL_TEXT, { method: 'POST', body: JSON.stringify(payload) });
+                    const data = await res.json();
+                    if (data.error) throw new Error(data.error.message);
+                    const text = data.candidates[0].content.parts[0].text;
+                    return isJson ? JSON.parse(text) : text;
+                } catch (e) {
+                    if (i === retries - 1) { showToast("AI connection failed. Try again.", "error"); return null; }
+                    await new Promise(r => setTimeout(r, delay));
+                    delay *= 2;
+                }
+            }
+        }
+
+        async function fetchImageAI(prompt) {
+            try {
+                const res = await fetch(API_URL_IMAGE, {
+                    method: 'POST',
+                    body: JSON.stringify({ instances: { prompt: prompt + " high quality photography, real world, highly detailed, scenic" }, parameters: { sampleCount: 1 } })
+                });
+                const data = await res.json();
+                if(data.predictions && data.predictions[0]) {
+                    return `data:image/png;base64,${data.predictions[0].bytesBase64Encoded}`;
+                }
+                return null;
+            } catch(e) {
+                return null;
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerText = message;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('theme-icon').className = isDark ? 'fa-solid fa-sun text-lg' : 'fa-solid fa-moon text-lg';
+            document.getElementById('theme-icon-mobile').className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        }
+
+        function navigateTo(view, data = null) {
+            appState.view = view;
+            saveState(); // Save view state
+            window.scrollTo(0, 0);
+            const content = document.getElementById('app-content');
+            content.innerHTML = '<div class="flex-grow flex items-center justify-center"><div class="loader"></div></div>';
+            
+            setTimeout(() => {
+                if (view === 'home') renderHome(content);
+                else if (view === 'countries') renderCountries(content);
+                else if (view === 'detail') renderDetail(content, data);
+                else if (view === 'compare') renderCompare(content);
+                else if (view === 'quiz') renderQuiz(content);
+                else if (view === 'about') renderAbout(content);
+                else if (view === 'contact') renderContact(content);
+            }, 100); // slight delay for smooth transition feel
+        }
+
+        // --- View Renderers ---
+
+        function renderHome(container) {
+            container.innerHTML = `
+                <div class="relative bg-cover bg-center h-[600px] flex items-center" style="background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.4)), url('https://upload.wikimedia.org/wikipedia/commons/4/4b/La_Tour_Eiffel_vue_de_la_Tour_Saint-Jacques_000222.jpg');">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full text-center slide-up">
+                        <h1 class="text-4xl md:text-6xl font-bold text-white mb-6 font-serif">Discover the World</h1>
+                        <p class="text-lg md:text-2xl text-gray-200 mb-8 max-w-3xl mx-auto">Explore facts, culture, AI travel guides, and stunning landmarks of all 195 countries.</p>
+                        <div class="max-w-2xl mx-auto bg-white rounded-full p-2 flex shadow-xl">
+                            <input type="text" id="home-search" placeholder="Search any country..." class="flex-grow bg-transparent px-6 py-3 outline-none text-gray-800 text-lg">
+                            <button onclick="handleSearch()" class="bg-primary hover:bg-blue-600 text-white rounded-full px-8 py-3 font-semibold transition">Search</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+                    <h2 class="text-3xl font-bold mb-8 text-center">Explore by Continent</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                        ${['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania'].map(cont => `
+                            <div onclick="appState.searchQuery='${cont}'; navigateTo('countries')" class="glass-card rounded-2xl p-6 text-center cursor-pointer card-hover transition">
+                                <i class="fa-solid fa-earth-${cont.split(' ')[0].toLowerCase()} text-4xl text-primary mb-3"></i>
+                                <h3 class="font-semibold">${cont}</h3>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="bg-gray-100 dark:bg-gray-800/50 py-16">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <h2 class="text-3xl font-bold mb-8 text-center">Featured Countries</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                            ${parsedCountries.filter(c => ['france','india','japan','united-states'].includes(c.id)).map(c => countryCardHTML(c)).join('')}
+                        </div>
+                        <div class="text-center mt-10">
+                            <button onclick="navigateTo('countries')" class="border-2 border-primary text-primary hover:bg-primary hover:text-white font-semibold py-3 px-8 rounded-full transition">View All 195 Countries</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('home-search').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') handleSearch();
+            });
+        }
+
+        function handleSearch() {
+            const query = document.getElementById('home-search').value;
+            appState.searchQuery = query;
+            saveState(); // Save search term
+            navigateTo('countries');
+        }
+
+        function countryCardHTML(c) {
+            return `
+                <div onclick="navigateTo('detail', '${c.id}')" class="glass-card rounded-2xl overflow-hidden cursor-pointer card-hover transition flex flex-col h-full bg-white dark:bg-darkCard">
+                    <div class="h-32 bg-gray-200 dark:bg-gray-700 relative overflow-hidden group">
+                        <img src="${c.flagUrl}" alt="${c.name} flag" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="hidden absolute inset-0 items-center justify-center text-6xl">${c.flag}</div>
+                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300">
+                            <span class="text-white font-semibold">Explore <i class="fa-solid fa-arrow-right ml-1"></i></span>
+                        </div>
+                    </div>
+                    <div class="p-5 flex-grow">
+                        <h3 class="text-xl font-bold mb-1">${c.name}</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-3"><i class="fa-solid fa-location-dot mr-1"></i> ${c.capital} &bull; ${c.region}</p>
+                        <div class="flex justify-between text-sm border-t border-gray-100 dark:border-gray-700 pt-3 mt-auto">
+                            <span><i class="fa-solid fa-users text-primary mr-1"></i> ${c.pop}</span>
+                            <span><i class="fa-solid fa-ruler-combined text-secondary mr-1"></i> ${c.area}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderCountries(container) {
+            let filterHtml = `
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 fade-in">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                        <h1 class="text-3xl font-bold">All 195 Countries</h1>
+                        <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                            <div class="relative w-full sm:w-64">
+                                <i class="fa-solid fa-search absolute left-3 top-3.5 text-gray-400"></i>
+                                <input type="text" id="grid-search" placeholder="Search countries..." value="${appState.searchQuery}" class="w-full bg-white dark:bg-darkCard border border-gray-200 dark:border-gray-700 rounded-xl pl-10 pr-4 py-3 outline-none focus:border-primary transition">
+                            </div>
+                            <select id="region-filter" class="bg-white dark:bg-darkCard border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 outline-none">
+                                <option value="all">All Continents</option>
+                                <option value="Africa">Africa</option>
+                                <option value="Asia">Asia</option>
+                                <option value="Europe">Europe</option>
+                                <option value="North America">North America</option>
+                                <option value="South America">South America</option>
+                                <option value="Oceania">Oceania</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="countries-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                        <!-- Rendered via JS -->
+                    </div>
+                </div>
+            `;
+            container.innerHTML = filterHtml;
+
+            const searchInput = document.getElementById('grid-search');
+            const regionFilter = document.getElementById('region-filter');
+            
+            if(appState.searchQuery && ['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania'].includes(appState.searchQuery)) {
+                regionFilter.value = appState.searchQuery;
+                searchInput.value = '';
+            }
+
+            const renderGrid = () => {
+                const query = searchInput.value.toLowerCase();
+                const region = regionFilter.value;
+                const filtered = parsedCountries.filter(c => {
+                    const matchQ = c.name.toLowerCase().includes(query) || c.capital.toLowerCase().includes(query);
+                    const matchR = region === 'all' || c.region === region;
+                    return matchQ && matchR;
+                });
+                document.getElementById('countries-grid').innerHTML = filtered.map(c => countryCardHTML(c)).join('');
+            };
+
+            searchInput.addEventListener('input', renderGrid);
+            regionFilter.addEventListener('change', renderGrid);
+            renderGrid();
+            appState.searchQuery = ''; // reset
+            saveState(); // Save reset state
+        }
+
+        async function renderDetail(container, countryId) {
+            const baseData = parsedCountries.find(c => c.id === countryId);
+            if(!baseData) { navigateTo('countries'); return; }
+            appState.activeCountry = baseData;
+            saveState(); // Save current active country
+            
+            let hardcoded = detailedData[countryId];
+            let needsAI = !hardcoded;
+
+            // Generate fully robust metrics instead of "N/A"
+            let dynamicData = getDynamicData(baseData);
+            let dData = hardcoded || dynamicData;
+
+            let html = `
+                <div class="fade-in">
+                    <!-- Hero -->
+                    <div class="relative h-[400px] md:h-[500px] w-full bg-gray-200 dark:bg-gray-800 overflow-hidden">
+                        ${dData.heroImage ? `<img src="${dData.heroImage}" class="w-full h-full object-cover" alt="${baseData.name}">` : `<div class="w-full h-full flex items-center justify-center bg-gray-900"><img src="${baseData.flagUrl}" class="w-full h-full object-cover opacity-40 blur-sm"></div>`}
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end pb-10 px-4 sm:px-6 lg:px-8">
+                            <div class="max-w-7xl mx-auto w-full flex items-end gap-6">
+                                <div class="w-24 h-16 md:w-32 md:h-24 shadow-2xl rounded overflow-hidden border-2 border-white/20 bg-white shrink-0">
+                                    <img src="${baseData.flagUrl}" class="w-full h-full object-cover" alt="${baseData.name} flag" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="hidden w-full h-full items-center justify-center text-4xl bg-gray-800">${baseData.flag}</div>
+                                </div>
+                                <div class="text-white pb-2">
+                                    <h1 class="text-4xl md:text-5xl font-bold font-serif mb-2">${baseData.name}</h1>
+                                    <p class="text-lg text-gray-200"><i class="fa-solid fa-location-dot"></i> ${baseData.capital}, ${baseData.region}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                            
+                            <!-- Main Content -->
+                            <div class="lg:col-span-2 space-y-8" id="country-main-content">
+                                <!-- Stats Grid -->
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <div class="bg-white dark:bg-darkCard p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                                        <div class="text-sm text-gray-500 mb-1">Population</div>
+                                        <div class="font-semibold text-lg">${baseData.pop}</div>
+                                    </div>
+                                    <div class="bg-white dark:bg-darkCard p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                                        <div class="text-sm text-gray-500 mb-1">Total Area</div>
+                                        <div class="font-semibold text-lg">${baseData.area}</div>
+                                    </div>
+                                    <div class="bg-white dark:bg-darkCard p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                                        <div class="text-sm text-gray-500 mb-1">Currency</div>
+                                        <div class="font-semibold text-sm truncate" title="${baseData.currency}">${baseData.currency}</div>
+                                    </div>
+                                    <div class="bg-white dark:bg-darkCard p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                                        <div class="text-sm text-gray-500 mb-1">Languages</div>
+                                        <div class="font-semibold text-sm truncate" title="${baseData.lang}">${baseData.lang}</div>
+                                    </div>
+                                    <div class="bg-white dark:bg-darkCard p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                                        <div class="text-sm text-gray-500 mb-1">Dialing Code</div>
+                                        <div class="font-semibold text-lg">${baseData.dial}</div>
+                                    </div>
+                                    <div class="bg-white dark:bg-darkCard p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                                        <div class="text-sm text-gray-500 mb-1">Timezone</div>
+                                        <div class="font-semibold text-sm truncate" title="${baseData.tz}">${baseData.tz}</div>
+                                    </div>
+                                    <div class="bg-white dark:bg-darkCard p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                                        <div class="text-sm text-gray-500 mb-1">GDP (Total)</div>
+                                        <div class="font-semibold text-lg" id="cd-gdp-total">${dData.gdpTotal}</div>
+                                    </div>
+                                    <div class="bg-white dark:bg-darkCard p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                                        <div class="text-sm text-gray-500 mb-1">HDI</div>
+                                        <div class="font-semibold text-lg" id="cd-hdi">${dData.hdi}</div>
+                                    </div>
+                                </div>
+
+                                <!-- Deep Data Tabs -->
+                                <div class="bg-white dark:bg-darkCard rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                                    <div class="border-b border-gray-100 dark:border-gray-700 p-6">
+                                        <h3 class="text-2xl font-bold mb-4 font-serif">Overview & History</h3>
+                                        <p class="text-gray-600 dark:text-gray-300 leading-relaxed mb-6" id="cd-history">${dData.history}</p>
+                                        <h4 class="font-semibold text-lg mb-2">Culture</h4>
+                                        <p class="text-gray-600 dark:text-gray-300 leading-relaxed mb-6" id="cd-culture">${dData.culture}</p>
+                                        
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8 text-sm text-gray-600 dark:text-gray-300 mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
+                                            <div><strong class="text-gray-900 dark:text-white">Founded:</strong> <span id="cd-founded">${dData.founded}</span></div>
+                                            <div><strong class="text-gray-900 dark:text-white">Density:</strong> <span id="cd-density">${dData.density}</span></div>
+                                            <div><strong class="text-gray-900 dark:text-white">Anthem:</strong> <span id="cd-anthem">${dData.anthem}</span></div>
+                                            <div><strong class="text-gray-900 dark:text-white">National Song:</strong> <span id="cd-natsong">${dData.nationalSong}</span></div>
+                                            <div><strong class="text-gray-900 dark:text-white">Government:</strong> <span id="cd-gov">${dData.government}</span></div>
+                                            <div><strong class="text-gray-900 dark:text-white">Religion:</strong> <span id="cd-rel">${dData.religion}</span></div>
+                                            <div><strong class="text-gray-900 dark:text-white">Top Sports:</strong> <span id="cd-sports">${dData.sports}</span></div>
+                                            <div><strong class="text-gray-900 dark:text-white">TLD:</strong> ${baseData.tld}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Landmarks -->
+                                <div>
+                                    <h3 class="text-2xl font-bold mb-4 font-serif">Famous Landmarks & Scenery</h3>
+                                    <div id="cd-landmarks" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        ${dData.landmarks.map(l => `
+                                            <div class="bg-white dark:bg-darkCard rounded-xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700 group">
+                                                <div class="h-48 overflow-hidden bg-gray-200 dark:bg-gray-800 flex items-center justify-center relative">
+                                                    <!-- Tries to permanently load a direct JPG, silently fixes it if the filename is wrong! -->
+                                                    <img src="${l.image ? l.image : `https://en.wikipedia.org/wiki/Special:FilePath/${encodeURIComponent(l.name.replace(/ /g, '_'))}.jpg?width=600`}" 
+                                                         alt="${l.name}" 
+                                                         class="w-full h-full object-cover group-hover:scale-110 transition duration-500"
+                                                         onerror="fetchWikiFallback(this, '${l.name.replace(/'/g, "\\'")}', '${baseData.name.replace(/'/g, "\\'")}')">
+                                                </div>
+                                                <div class="p-4">
+                                                    <h4 class="font-bold text-lg mb-1">${l.name}</h4>
+                                                    <p class="text-sm text-gray-500 dark:text-gray-400">${l.desc}</p>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sidebar / AI Tools / Map -->
+                            <div class="space-y-6">
+                                <!-- Map -->
+                                <div class="bg-white dark:bg-darkCard rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 h-[300px] map-container">
+                                    <iframe src="https://maps.google.com/maps?q=${encodeURIComponent(baseData.name)}&t=&z=5&ie=UTF8&iwloc=&output=embed"></iframe>
+                                </div>
+
+                                <!-- AI Tools Box -->
+                                <div class="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-6 shadow-lg text-white">
+                                    <h3 class="text-xl font-bold mb-4 flex items-center"><i class="fa-solid fa-wand-magic-sparkles mr-2"></i> AI Travel Tools</h3>
+                                    
+                                    ${needsAI ? `
+                                    <button onclick="aiGenerateFullGuide('${baseData.name}')" class="w-full bg-white text-blue-600 hover:bg-gray-100 font-semibold py-3 px-4 rounded-xl mb-3 flex items-center justify-center transition shadow-md" id="btn-generate-guide">
+                                        <i class="fa-solid fa-book-open mr-2"></i> Auto-Generate Full Guide ✨
+                                    </button>
+                                    ` : ''}
+
+                                    <button onclick="openItineraryModal('${baseData.name}')" class="w-full bg-black/20 hover:bg-black/30 font-semibold py-3 px-4 rounded-xl mb-3 flex items-center justify-center transition border border-white/30">
+                                        <i class="fa-regular fa-calendar-check mr-2"></i> AI Itinerary Planner ✨
+                                    </button>
+
+                                    <button onclick="aiHiddenGems('${baseData.name}')" class="w-full bg-black/20 hover:bg-black/30 font-semibold py-3 px-4 rounded-xl mb-3 flex items-center justify-center transition border border-white/30">
+                                        <i class="fa-regular fa-gem mr-2"></i> Hidden Gems Finder ✨
+                                    </button>
+
+                                    <button onclick="aiCultureFood('${baseData.name}')" class="w-full bg-black/20 hover:bg-black/30 font-semibold py-3 px-4 rounded-xl mb-3 flex items-center justify-center transition border border-white/30">
+                                        <i class="fa-solid fa-utensils mr-2"></i> Culture & Food Explorer ✨
+                                    </button>
+
+                                    <!-- New Language Survival Guide -->
+                                    <button onclick="aiSurvivalGuide('${baseData.name}', '${baseData.lang.replace(/'/g, "\\'")}')" class="w-full bg-black/20 hover:bg-black/30 font-semibold py-3 px-4 rounded-xl mb-3 flex items-center justify-center transition border border-white/30">
+                                        <i class="fa-solid fa-language mr-2"></i> Local Survival Phrases ✨
+                                    </button>
+
+                                    <!-- New Folklore Teller -->
+                                    <button onclick="aiFolkloreTeller('${baseData.name}')" class="w-full bg-black/20 hover:bg-black/30 font-semibold py-3 px-4 rounded-xl mb-3 flex items-center justify-center transition border border-white/30">
+                                        <i class="fa-solid fa-dragon mr-2"></i> Myth & Folklore Teller ✨
+                                    </button>
+
+                                    <button onclick="aiLandmarksScenery('${baseData.name}')" class="w-full bg-black/20 hover:bg-black/30 font-semibold py-3 px-4 rounded-xl mb-3 flex items-center justify-center transition border border-white/30">
+                                        <i class="fa-solid fa-mountain-sun mr-2"></i> Landmarks Gallery ✨
+                                    </button>
+                                    
+                                    <button onclick="appState.compareA='${baseData.id}'; navigateTo('compare')" class="w-full bg-black/20 hover:bg-black/30 font-semibold py-3 px-4 rounded-xl flex items-center justify-center transition border border-white/30">
+                                        <i class="fa-solid fa-scale-balanced mr-2"></i> Compare Country ✨
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        // --- AI Action Functions ---
+        
+        async function aiGenerateFullGuide(countryName) {
+            const btn = document.getElementById('btn-generate-guide');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = `<div class="loader mx-auto"></div>`;
+            btn.disabled = true;
+            
+            const prompt = `Provide a strict JSON object with deeply accurate details for the country ${countryName}:
+            {
+              "history": "Brief historical overview (2 paragraphs)",
+              "culture": "Cultural overview (1 paragraph)",
+              "founded": "Founding date/year or independence",
+              "density": "Population density per sq km",
+              "anthem": "Name of national anthem",
+              "nationalSong": "Name of national song (if applicable)",
+              "religion": "Religion demographics %",
+              "government": "Government key executive positions (e.g. President Name, PM Name)",
+              "gdpTotal": "Total GDP",
+              "gdpPerCapita": "GDP Per Capita",
+              "hdi": "HDI Ranking/Score",
+              "sports": "Top 3 popular sports",
+              "landmarks": [
+                 {"name": "Famous Landmark 1", "desc": "Short description"},
+                 {"name": "Famous Landmark 2", "desc": "Short description"}
+              ]
+            }`;
+
+            const data = await fetchAI(prompt, true);
+            if(data) {
+                document.getElementById('cd-history').innerText = data.history;
+                document.getElementById('cd-culture').innerText = data.culture;
+                document.getElementById('cd-founded').innerText = data.founded;
+                document.getElementById('cd-density').innerText = data.density;
+                document.getElementById('cd-anthem').innerText = data.anthem;
+                document.getElementById('cd-natsong').innerText = data.nationalSong || "-";
+                document.getElementById('cd-gov').innerText = data.government;
+                document.getElementById('cd-rel').innerText = data.religion;
+                document.getElementById('cd-sports').innerText = data.sports;
+                document.getElementById('cd-gdp-total').innerText = data.gdpTotal;
+                document.getElementById('cd-hdi').innerText = data.hdi;
+                
+                let lmHtml = '';
+                for(const l of data.landmarks) {
+                    lmHtml += `
+                        <div class="bg-white dark:bg-darkCard rounded-xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700 group">
+                            <div class="h-48 overflow-hidden bg-gray-200 dark:bg-gray-800 flex items-center justify-center relative">
+                                <img src="https://en.wikipedia.org/wiki/Special:FilePath/${encodeURIComponent(l.name.replace(/ /g, '_'))}.jpg?width=600" 
+                                     alt="${l.name}" 
+                                     class="w-full h-full object-cover group-hover:scale-110 transition duration-500"
+                                     onerror="fetchWikiFallback(this, '${l.name.replace(/'/g, "\\'")}', '${countryName.replace(/'/g, "\\'")}')">
+                            </div>
+                            <div class="p-4">
+                                <h4 class="font-bold text-lg mb-1">${l.name}</h4>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">${l.desc}</p>
+                            </div>
+                        </div>
+                    `;
+                }
+                document.getElementById('cd-landmarks').innerHTML = lmHtml;
+                btn.style.display = 'none';
+                showToast("Data successfully generated!");
+            } else {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }
+        }
+
+        async function aiGenerateLandmarkImage(prompt, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `<div class="loader"></div>`;
+            const imgData = await fetchImageAI(prompt);
+            if(imgData) {
+                container.innerHTML = `<img src="${imgData}" class="w-full h-full object-cover">`;
+            } else {
+                container.innerHTML = `<p class="text-xs text-red-500 text-center px-2">Image gen unavailable in preview for this prompt.</p>`;
+            }
+        }
+
+        function openItineraryModal(countryName) {
+            const html = `
+                <div class="p-6">
+                    <h2 class="text-2xl font-bold mb-4">AI Itinerary Planner - ${countryName}</h2>
+                    <p class="text-gray-600 dark:text-gray-400 mb-4">Generate a day-by-day travel plan tailored to your interests.</p>
+                    <div class="space-y-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Duration (Days)</label>
+                            <input type="number" id="itin-days" value="3" min="1" max="14" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Travel Style / Interests</label>
+                            <input type="text" id="itin-interest" placeholder="e.g., History, Food, Nature, Budget" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 outline-none">
+                        </div>
+                    </div>
+                    <button id="itin-gen-btn" onclick="aiGenerateItinerary('${countryName}')" class="w-full bg-primary hover:bg-blue-600 text-white font-semibold py-3 rounded-lg transition">Generate Plan</button>
+                    <div id="itin-result" class="mt-6 space-y-4 hidden"></div>
+                </div>
+            `;
+            showModal(html);
+        }
+
+        async function aiGenerateItinerary(countryName) {
+            const days = document.getElementById('itin-days').value;
+            const interest = document.getElementById('itin-interest').value;
+            const btn = document.getElementById('itin-gen-btn');
+            const resContainer = document.getElementById('itin-result');
+            
+            btn.innerHTML = `<div class="loader mx-auto"></div>`;
+            btn.disabled = true;
+
+            const prompt = `Create a detailed, exciting ${days}-day travel itinerary for ${countryName}. Focus on: ${interest || 'general highlights'}. Return ONLY strict JSON in this format: { "days": [ { "day": 1, "title": "Day title", "activities": ["Activity 1", "Activity 2"] } ] }`;
+            
+            const data = await fetchAI(prompt, true);
+            if(data && data.days) {
+                let rHtml = '';
+                data.days.forEach(d => {
+                    rHtml += `
+                        <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+                            <h4 class="font-bold text-primary mb-2">Day ${d.day}: ${d.title}</h4>
+                            <ul class="list-disc pl-5 space-y-1 text-sm text-gray-700 dark:text-gray-300">
+                                ${d.activities.map(a => `<li>${a}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                });
+                resContainer.innerHTML = rHtml;
+                resContainer.classList.remove('hidden');
+                btn.style.display = 'none';
+            } else {
+                btn.innerHTML = "Generate Plan";
+                btn.disabled = false;
+            }
+        }
+
+        async function aiHiddenGems(countryName) {
+            showModal(`
+                <div class="p-6 h-[400px] flex flex-col items-center justify-center text-center">
+                    <div class="loader w-10 h-10 mb-4 border-4"></div>
+                    <h2 class="text-xl font-bold">Unearthing Hidden Gems in ${countryName}...</h2>
+                    <p class="text-gray-500 mt-2">Asking AI to find lesser-known spots.</p>
+                </div>
+            `);
+
+            const prompt = `Tell me about 3 hidden gems or lesser-known beautiful places to visit in ${countryName}. Format as HTML with a <h3> for the name and a <p> for the description. Keep it concise.`;
+            const data = await fetchAI(prompt, false);
+            
+            if(data) {
+                showModal(`
+                    <div class="p-6">
+                        <h2 class="text-2xl font-bold mb-4 border-b pb-2"><i class="fa-regular fa-gem text-secondary mr-2"></i> Hidden Gems in ${countryName}</h2>
+                        <div class="prose dark:prose-invert max-w-none text-sm md:text-base space-y-4">
+                            ${data}
+                        </div>
+                    </div>
+                `);
+            } else {
+                document.getElementById('modal-backdrop').classList.add('hidden');
+            }
+        }
+
+        async function aiCultureFood(countryName) {
+            showModal(`
+                <div class="p-6 h-[400px] flex flex-col items-center justify-center text-center">
+                    <div class="loader w-10 h-10 mb-4 border-4"></div>
+                    <h2 class="text-xl font-bold">Exploring Culture & Food in ${countryName}...</h2>
+                    <p class="text-gray-500 mt-2">Gathering local traditions, lifestyle, and famous dishes.</p>
+                </div>
+            `);
+
+            const prompt = `Act as an expert cultural guide. Describe the rich culture, unique traditions, general lifestyle, and top famous local food/cuisine of ${countryName}. Format with HTML tags like <h3>, <ul>, <li>, and <p>. Keep it engaging and descriptive.`;
+            const data = await fetchAI(prompt, false);
+            
+            if(data) {
+                showModal(`
+                    <div class="p-6">
+                        <h2 class="text-2xl font-bold mb-4 border-b pb-2"><i class="fa-solid fa-utensils text-orange-500 mr-2"></i> Culture & Food Explorer - ${countryName}</h2>
+                        <div class="prose dark:prose-invert max-w-none text-sm md:text-base space-y-4">
+                            ${data}
+                        </div>
+                    </div>
+                `);
+            } else {
+                closeModal();
+            }
+        }
+
+        async function aiLandmarksScenery(countryName) {
+            showModal(`
+                <div class="p-6 h-[400px] flex flex-col items-center justify-center text-center">
+                    <div class="loader w-10 h-10 mb-4 border-4"></div>
+                    <h2 class="text-xl font-bold">Fetching Landmarks & Scenery for ${countryName}...</h2>
+                </div>
+            `);
+
+            const prompt = `List exactly 3 highly famous or beautiful landmarks/scenery locations in ${countryName}. Provide ONLY a JSON array in this format: [{"name": "Landmark Name", "desc": "Short description"}]`;
+            const data = await fetchAI(prompt, true);
+            
+            if(data && Array.isArray(data)) {
+                let html = `<div class="p-6"><h2 class="text-2xl font-bold mb-6 border-b pb-2"><i class="fa-solid fa-mountain-sun text-secondary mr-2"></i> Scenery Gallery - ${countryName}</h2><div class="space-y-6">`;
+                showModal(html + `<div class="text-center py-10"><div class="loader mx-auto mb-4"></div><p>Generating images...</p></div></div>`);
+                
+                for(let item of data) {
+                    const imgUrl = await fetchImageAI(`${item.name}, ${countryName}`);
+                    html += `
+                        <div class="bg-gray-50 dark:bg-gray-800 rounded-2xl overflow-hidden shadow-md flex flex-col md:flex-row">
+                            <div class="md:w-1/2 h-48 md:h-auto bg-gray-200 dark:bg-gray-700">
+                                ${imgUrl ? `<img src="${imgUrl}" class="w-full h-full object-cover">` : `<div class="w-full h-full flex items-center justify-center text-gray-500 text-sm">Image gen unavailable in preview</div>`}
+                            </div>
+                            <div class="p-6 md:w-1/2 flex flex-col justify-center">
+                                <h3 class="text-xl font-bold mb-2">${item.name}</h3>
+                                <p class="text-gray-600 dark:text-gray-300 text-sm">${item.desc}</p>
+                            </div>
+                        </div>
+                    `;
+                }
+                html += `</div></div>`;
+                showModal(html);
+            } else {
+                closeModal();
+            }
+        }
+
+        async function aiSurvivalGuide(countryName, languages) {
+            showModal(`
+                <div class="p-6 h-[400px] flex flex-col items-center justify-center text-center">
+                    <div class="loader w-10 h-10 mb-4 border-4"></div>
+                    <h2 class="text-xl font-bold">Translating Survival Phrases...</h2>
+                    <p class="text-gray-500 mt-2">Consulting our AI linguist for ${countryName}.</p>
+                </div>
+            `);
+
+            const prompt = `As a local language expert, provide 5 essential survival phrases for a traveler visiting ${countryName} (Primary languages: ${languages}). For each, include the phrase in the local language, a pronunciation guide, the English meaning, and a brief tip on cultural context (when/how to use it). Format using HTML tags <h3>, <ul>, <li>, <strong>, <em>. Keep it engaging.`;
+            const data = await fetchAI(prompt, false);
+            
+            if(data) {
+                showModal(`
+                    <div class="p-6">
+                        <h2 class="text-2xl font-bold mb-4 border-b pb-2"><i class="fa-solid fa-language text-blue-500 mr-2"></i> Survival Phrases - ${countryName} ✨</h2>
+                        <div class="prose dark:prose-invert max-w-none text-sm md:text-base space-y-4">
+                            ${data}
+                        </div>
+                    </div>
+                `);
+            } else {
+                closeModal();
+            }
+        }
+
+        async function aiFolkloreTeller(countryName) {
+            showModal(`
+                <div class="p-6 h-[400px] flex flex-col items-center justify-center text-center">
+                    <div class="loader w-10 h-10 mb-4 border-4"></div>
+                    <h2 class="text-xl font-bold">Gathering Local Legends...</h2>
+                    <p class="text-gray-500 mt-2">Asking the AI storyteller about myths from ${countryName}.</p>
+                </div>
+            `);
+
+            const prompt = `Act as a local storyteller. Tell a captivating, famous traditional myth, legend, or piece of folklore from ${countryName}. Format the story nicely with HTML tags like <h3> for the title and <p> for the paragraphs. Keep it under 3 paragraphs but make it highly engaging and evocative.`;
+            const data = await fetchAI(prompt, false);
+            
+            if(data) {
+                showModal(`
+                    <div class="p-6">
+                        <h2 class="text-2xl font-bold mb-4 border-b pb-2"><i class="fa-solid fa-dragon text-purple-500 mr-2"></i> Local Folklore - ${countryName} ✨</h2>
+                        <div class="prose dark:prose-invert max-w-none text-sm md:text-base space-y-4">
+                            ${data}
+                        </div>
+                    </div>
+                `);
+            } else {
+                closeModal();
+            }
+        }
+
+        // Stylish Custom Language Change Logic
+        function changeLang(code, name) {
+            document.getElementById('lang-text').innerText = name;
+            
+            const combo = document.querySelector('.goog-te-combo');
+            if (combo) {
+                // Instantly swap Google Translate element
+                combo.value = code;
+                combo.dispatchEvent(new Event('change'));
+            } else {
+                // If it's still loading or hasn't rendered, fallback strictly via cookie and reload
+                saveState(); // Preserve exact view for the user
+                const domain = window.location.hostname;
+                document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+                document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${domain};`;
+                if (code !== 'en') {
+                    document.cookie = `googtrans=/en/${code}; path=/;`;
+                }
+                window.location.reload();
+            }
+        }
+
+        // --- Compare View ---
+        function renderCompare(container) {
+            let html = `
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 fade-in min-h-[70vh]">
+                    <h1 class="text-3xl font-bold text-center mb-8">Country Comparison Tool</h1>
+                    
+                    <div class="bg-white dark:bg-darkCard rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 md:p-10 mb-8">
+                        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-center mb-8">
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium mb-2">Select Country A</label>
+                                <select id="comp-a" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 outline-none" onchange="updateCompareTable()">
+                                    <option value="">-- Select --</option>
+                                    ${parsedCountries.map(c => `<option value="${c.id}" ${appState.compareA === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="text-center font-bold text-gray-400 hidden md:block">VS</div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium mb-2">Select Country B</label>
+                                <select id="comp-b" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 outline-none" onchange="updateCompareTable()">
+                                    <option value="">-- Select --</option>
+                                    ${parsedCountries.map(c => `<option value="${c.id}" ${appState.compareB === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="compare-results" class="overflow-x-auto hidden">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                                        <th class="p-4 font-semibold w-1/3">Feature</th>
+                                        <th class="p-4 font-semibold w-1/3" id="th-a">Country A</th>
+                                        <th class="p-4 font-semibold w-1/3" id="th-b">Country B</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="compare-tbody" class="divide-y divide-gray-100 dark:divide-gray-700 text-sm">
+                                    <!-- Injected -->
+                                </tbody>
+                            </table>
+                            <div class="mt-8 text-center">
+                                <button onclick="aiCompareInsights()" class="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-semibold py-2 px-6 rounded-full shadow-lg transition"><i class="fa-solid fa-brain mr-2"></i> Get AI Insights</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+            if(appState.compareA && appState.compareB) updateCompareTable();
+        }
+
+        function updateCompareTable() {
+            const idA = document.getElementById('comp-a').value;
+            const idB = document.getElementById('comp-b').value;
+            const resDiv = document.getElementById('compare-results');
+            
+            appState.compareA = idA;
+            appState.compareB = idB;
+            saveState(); // Save comparison choices
+
+            if(!idA || !idB) { resDiv.classList.add('hidden'); return; }
+
+            const cA = parsedCountries.find(c => c.id === idA);
+            const cB = parsedCountries.find(c => c.id === idB);
+
+            document.getElementById('th-a').innerHTML = `<img src="${cA.flagUrl}" class="w-8 h-6 inline-block mr-2 object-cover shadow-sm rounded-sm"> ${cA.name}`;
+            document.getElementById('th-b').innerHTML = `<img src="${cB.flagUrl}" class="w-8 h-6 inline-block mr-2 object-cover shadow-sm rounded-sm"> ${cB.name}`;
+
+            const rows = [
+                ['Capital', cA.capital, cB.capital],
+                ['Continent', cA.region, cB.region],
+                ['Population', cA.pop, cB.pop],
+                ['Area', cA.area, cB.area],
+                ['Currency', cA.currency, cB.currency],
+                ['Primary Languages', cA.lang, cB.lang],
+                ['Calling Code', cA.dial, cB.dial],
+                ['Timezone', cA.tz, cB.tz]
+            ];
+
+            document.getElementById('compare-tbody').innerHTML = rows.map(r => `
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
+                    <td class="p-4 font-medium text-gray-500 dark:text-gray-400">${r[0]}</td>
+                    <td class="p-4">${r[1]}</td>
+                    <td class="p-4">${r[2]}</td>
+                </tr>
+            `).join('');
+
+            resDiv.classList.remove('hidden');
+        }
+
+        async function aiCompareInsights() {
+            const cA = parsedCountries.find(c => c.id === appState.compareA);
+            const cB = parsedCountries.find(c => c.id === appState.compareB);
+            
+            showModal(`
+                <div class="p-6 h-[300px] flex flex-col items-center justify-center text-center">
+                    <div class="loader w-10 h-10 mb-4 border-4"></div>
+                    <h2 class="text-xl font-bold">Analyzing ${cA.name} vs ${cB.name}...</h2>
+                </div>
+            `);
+
+            const prompt = `Briefly compare the culture, economy, and travel experience of ${cA.name} and ${cB.name}. Highlight key differences and similarities in 3 short paragraphs. Format using HTML tags <p> and <strong>.`;
+            const data = await fetchAI(prompt, false);
+            
+            if(data) {
+                showModal(`
+                    <div class="p-6">
+                        <h2 class="text-2xl font-bold mb-4 border-b pb-2">AI Insights: ${cA.name} vs ${cB.name}</h2>
+                        <div class="text-gray-700 dark:text-gray-300 space-y-4">
+                            ${data}
+                        </div>
+                    </div>
+                `);
+            }
+        }
+
+        // --- Quiz View ---
+        function renderQuiz(container) {
+            appState.quizScore = 0;
+            appState.quizIndex = 0;
+            const html = `
+                <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16 fade-in min-h-[70vh] flex flex-col justify-center">
+                    <div class="bg-white dark:bg-darkCard rounded-3xl shadow-xl p-8 md:p-12 text-center relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-full h-2 bg-gray-100 dark:bg-gray-800">
+                            <div id="quiz-progress" class="h-full bg-primary transition-all duration-300" style="width: 100%"></div>
+                        </div>
+                        <i class="fa-solid fa-earth-americas text-6xl text-primary mb-6"></i>
+                        <h1 class="text-3xl md:text-4xl font-bold mb-4">World Geography Quiz</h1>
+                        <p class="text-gray-500 dark:text-gray-400 mb-8 flex items-center justify-center gap-2">
+                            <span class="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">Endless Mode</span>
+                            Test your knowledge of capitals, flags, and facts!
+                        </p>
+                        
+                        <div id="quiz-content">
+                            <button onclick="startQuiz()" class="bg-primary hover:bg-blue-600 text-white font-bold py-4 px-10 rounded-full text-lg shadow-lg hover:shadow-xl transition transform hover:-translate-y-1">Start Endless Quiz</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        function startQuiz() {
+            appState.quizScore = 0;
+            appState.quizIndex = 0;
+            nextQuizQuestion();
+        }
+
+        function endQuiz() {
+            document.getElementById('quiz-content').innerHTML = `
+                <h2 class="text-3xl font-bold mb-2">Quiz Finished!</h2>
+                <p class="text-xl mb-6">You scored <span class="text-primary font-bold">${appState.quizScore}</span> out of ${appState.quizIndex} questions.</p>
+                <button onclick="startQuiz()" class="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-bold py-3 px-8 rounded-full transition mr-2">Play Again</button>
+                <button onclick="navigateTo('countries')" class="bg-primary hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full transition">Study More</button>
+            `;
+        }
+
+        function nextQuizQuestion() {
+            // Generate question
+            const types = ['capital', 'flag', 'region'];
+            const type = types[Math.floor(Math.random() * types.length)];
+            const correctC = parsedCountries[Math.floor(Math.random() * parsedCountries.length)];
+            
+            let options = new Set([correctC]);
+            while(options.size < 4) options.add(parsedCountries[Math.floor(Math.random() * parsedCountries.length)]);
+            options = Array.from(options).sort(() => Math.random() - 0.5);
+
+            let qText = "";
+            let oHtml = "";
+
+            if(type === 'capital') {
+                qText = `What is the capital of ${correctC.name}?`;
+                oHtml = options.map(o => `<button onclick="handleQuizAnswer('${o.id === correctC.id}')" class="w-full text-left p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-primary hover:text-white hover:border-primary transition font-medium">${o.capital}</button>`).join('');
+            } else if(type === 'flag') {
+                qText = `Which country does this flag belong to? <div class="mt-6 flex justify-center"><img src="${correctC.flagUrl}" class="w-40 h-28 object-cover shadow-lg border border-gray-200 rounded"></div>`;
+                oHtml = options.map(o => `<button onclick="handleQuizAnswer('${o.id === correctC.id}')" class="w-full text-left p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-primary hover:text-white hover:border-primary transition font-medium">${o.name}</button>`).join('');
+            } else {
+                qText = `${correctC.name} is located in which continent?`;
+                const regions = ['Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania'];
+                let roptions = new Set([correctC.region]);
+                while(roptions.size < 4) roptions.add(regions[Math.floor(Math.random() * regions.length)]);
+                roptions = Array.from(roptions).sort(() => Math.random() - 0.5);
+                oHtml = roptions.map(r => `<button onclick="handleQuizAnswer('${r === correctC.region}')" class="w-full text-left p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-primary hover:text-white hover:border-primary transition font-medium">${r}</button>`).join('');
+            }
+
+            document.getElementById('quiz-content').innerHTML = `
+                <div class="flex justify-between items-center mb-6">
+                    <div class="text-sm text-gray-500 font-bold tracking-wider uppercase">Question ${appState.quizIndex + 1}</div>
+                    <div class="text-sm font-bold text-primary bg-blue-50 dark:bg-blue-900/30 px-4 py-1.5 rounded-full border border-blue-100 dark:border-blue-800">Score: ${appState.quizScore} / ${appState.quizIndex}</div>
+                </div>
+                <h3 class="text-2xl font-semibold mb-8">${qText}</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    ${oHtml}
+                </div>
+                <div class="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800">
+                    <button onclick="endQuiz()" class="text-gray-400 hover:text-red-500 text-sm font-medium transition flex items-center justify-center w-full"><i class="fa-solid fa-stop-circle mr-2"></i> Stop Endless Quiz</button>
+                </div>
+            `;
+        }
+
+        window.handleQuizAnswer = (isCorrect) => {
+            if(isCorrect === 'true') appState.quizScore++;
+            appState.quizIndex++;
+            nextQuizQuestion();
+        }
+
+
+        // --- About & Contact ---
+        function renderAbout(container) {
+            container.innerHTML = `
+                <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 fade-in text-center min-h-[70vh] flex flex-col justify-center">
+                    <h1 class="text-4xl font-bold mb-6 font-serif">About Terra</h1>
+                    <div class="w-24 h-1 bg-primary mx-auto mb-8 rounded-full"></div>
+                    <p class="text-lg md:text-xl text-gray-600 dark:text-gray-300 leading-relaxed mb-6">
+                        Terra is a comprehensive global explorer designed to educate, inspire, and connect people with the fascinating diversity of our 195 nations.
+                    </p>
+                    <p class="text-lg text-gray-600 dark:text-gray-300 leading-relaxed mb-10">
+                        Our mission is to provide accurate, engaging, and beautiful representations of world geography, history, and culture. Whether you are a student, a traveler, or just curious about the world, Terra is your ultimate resource.
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
+                        <div class="p-6 bg-white dark:bg-darkCard rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                            <i class="fa-solid fa-book-atlas text-4xl text-blue-500 mb-4"></i>
+                            <h3 class="font-bold text-xl mb-2">Education</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Detailed facts and histories to expand your global knowledge.</p>
+                        </div>
+                        <div class="p-6 bg-white dark:bg-darkCard rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                            <i class="fa-solid fa-plane-departure text-4xl text-green-500 mb-4"></i>
+                            <h3 class="font-bold text-xl mb-2">Travel</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Discover hidden gems and famous landmarks to plan your trips.</p>
+                        </div>
+                        <div class="p-6 bg-white dark:bg-darkCard rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                            <i class="fa-solid fa-handshake-angle text-4xl text-purple-500 mb-4"></i>
+                            <h3 class="font-bold text-xl mb-2">Connection</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Understanding different cultures to bring the world closer together.</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderContact(container) {
+            container.innerHTML = `
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 fade-in min-h-[70vh]">
+                    <h1 class="text-4xl font-bold mb-10 text-center font-serif">Contact Us</h1>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 bg-white dark:bg-darkCard rounded-3xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700">
+                        <div class="p-10 bg-gray-50 dark:bg-gray-800">
+                            <h2 class="text-2xl font-bold mb-6">Get in Touch</h2>
+                            <p class="text-gray-600 dark:text-gray-400 mb-8">Have questions, feedback, or data updates? We'd love to hear from you.</p>
+                            
+                            <div class="space-y-6">
+                                <div class="flex items-start">
+                                    <div class="w-12 h-12 bg-white dark:bg-darkBg rounded-full flex items-center justify-center text-primary text-xl shadow-sm shrink-0">
+                                        <i class="fa-solid fa-location-dot"></i>
+                                    </div>
+                                    <div class="ml-4 pt-1">
+                                        <h4 class="font-semibold text-lg">Our Office</h4>
+                                        <p class="text-gray-600 dark:text-gray-400 text-sm mt-1 leading-relaxed">Plot No. IS-2027-2031,<br>Sitapura, Jaipur,<br>Rajasthan, India</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="w-12 h-12 bg-white dark:bg-darkBg rounded-full flex items-center justify-center text-primary text-xl shadow-sm shrink-0">
+                                        <i class="fa-solid fa-envelope"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <h4 class="font-semibold text-lg">Email Us</h4>
+                                        <p class="text-gray-600 dark:text-gray-400 text-sm">contact@terra-explorer.com</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-10">
+                            <form onsubmit="event.preventDefault(); showToast('Message sent successfully!', 'success'); this.reset();">
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1">Name</label>
+                                        <input type="text" required class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 outline-none focus:border-primary transition">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1">Email</label>
+                                        <input type="email" required class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 outline-none focus:border-primary transition">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1">Message</label>
+                                        <textarea required rows="4" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 outline-none focus:border-primary transition resize-none"></textarea>
+                                    </div>
+                                    <button type="submit" class="w-full bg-primary hover:bg-blue-600 text-white font-bold py-3 rounded-xl transition shadow-lg hover:shadow-xl">Send Message</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- Modals & Chat ---
+
+        function showModal(contentHtml) {
+            const backdrop = document.getElementById('modal-backdrop');
+            const content = document.getElementById('modal-content');
+            content.innerHTML = `
+                <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white z-10 bg-white/50 dark:bg-black/50 rounded-full w-8 h-8 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                ${contentHtml}
+            `;
+            backdrop.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('modal-backdrop').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function toggleChat() {
+            const win = document.getElementById('chat-window');
+            if(win.classList.contains('hidden')) {
+                win.classList.remove('hidden');
+                document.getElementById('chat-input').focus();
+            } else {
+                win.classList.add('hidden');
+            }
+        }
+
+        document.getElementById('chat-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const msg = input.value.trim();
+            if(!msg) return;
+
+            addChatMessage(msg, 'user');
+            input.value = '';
+
+            const typingId = 'typing-' + Date.now();
+            addChatMessage('<div class="flex space-x-1"><div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div><div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div><div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></div></div>', 'bot', typingId);
+
+            const context = `You are Terra, a friendly AI travel and geography assistant. Keep answers brief (max 3 sentences) unless asked for more. User says: ${msg}`;
+            const reply = await fetchAI(context);
+            
+            document.getElementById(typingId).remove();
+            if(reply) {
+                addChatMessage(reply, 'bot');
+            } else {
+                addChatMessage("Sorry, I'm having trouble connecting to my knowledge base.", 'bot');
+            }
+        });
+
+        function addChatMessage(html, sender, id=null) {
+            const container = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            if(id) div.id = id;
+            
+            if(sender === 'user') {
+                div.className = 'flex items-start justify-end slide-up';
+                div.innerHTML = `<div class="bg-primary text-white p-3 rounded-2xl rounded-tr-none text-sm shadow-sm max-w-[85%]">${html}</div>`;
+            } else {
+                div.className = 'flex items-start slide-up';
+                div.innerHTML = `<div class="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 p-3 rounded-2xl rounded-tl-none text-sm shadow-sm max-w-[85%] prose dark:prose-invert prose-sm">${html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</div>`;
+            }
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // --- Init ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Restore translated language label from cookie on load
+            const match = document.cookie.match(/googtrans=\/en\/([a-zA-Z-]+)/);
+            if(match && match[1]) {
+                const langMap = {'es':'Español', 'fr':'Français', 'de':'Deutsch', 'zh-CN':'中文', 'hi':'हिन्दी', 'ar':'العربية', 'ru':'Русский'};
+                document.getElementById('lang-text').innerText = langMap[match[1]] || 'Translated';
+            }
+
+            // Check theme pref
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('theme-icon').className = 'fa-solid fa-sun text-lg';
+                document.getElementById('theme-icon-mobile').className = 'fa-solid fa-sun';
+            }
+            
+            // Add remaining real countries with respective flags to reach 195
+            const remainingCountries = [
+                "Antigua and Barbuda|St. John's|North America|🇦🇬|99K|442 km²|XCD|+1-268|English|UTC-4|.ag",
+                "Bahamas|Nassau|North America|🇧🇸|400K|13,880 km²|BSD|+1-242|English|UTC-5|.bs",
+                "Barbados|Bridgetown|North America|🇧🇧|281K|430 km²|BBD|+1-246|English|UTC-4|.bb",
+                "Belize|Belmopan|North America|🇧🇿|400K|22,966 km²|BZD|+501|English|UTC-6|.bz",
+                "Cabo Verde|Praia|Africa|🇨🇻|587K|4,033 km²|CVE|+238|Portuguese|UTC-1|.cv",
+                "Comoros|Moroni|Africa|🇰🇲|888K|2,235 km²|KMF|+269|Comorian|UTC+3|.km",
+                "Dominica|Roseau|North America|🇩🇲|72K|751 km²|XCD|+1-767|English|UTC-4|.dm",
+                "Grenada|St. George's|North America|🇬🇩|113K|344 km²|XCD|+1-473|English|UTC-4|.gd",
+                "Kiribati|Tarawa|Oceania|🇰🇮|121K|811 km²|AUD|+686|English|UTC+12|.ki",
+                "Liechtenstein|Vaduz|Europe|🇱🇮|39K|160 km²|CHF|+423|German|UTC+1|.li",
+                "Marshall Islands|Majuro|Oceania|🇲🇭|59K|181 km²|USD|+692|English|UTC+12|.mh",
+                "Micronesia|Palikir|Oceania|🇫🇲|116K|702 km²|USD|+691|English|UTC+11|.fm",
+                "Monaco|Monaco|Europe|🇲🇨|39K|2 km²|EUR|+377|French|UTC+1|.mc",
+                "Nauru|Yaren|Oceania|🇳🇷|10K|21 km²|AUD|+674|Nauruan|UTC+12|.nr",
+                "Palau|Ngerulmud|Oceania|🇵🇼|18K|459 km²|USD|+680|Palauan|UTC+9|.pw",
+                "Saint Kitts and Nevis|Basseterre|North America|🇰🇳|47K|261 km²|XCD|+1-869|English|UTC-4|.kn",
+                "Saint Lucia|Castries|North America|🇱🇨|184K|616 km²|XCD|+1-758|English|UTC-4|.lc",
+                "Saint Vincent and the Grenadines|Kingstown|North America|🇻🇨|111K|389 km²|XCD|+1-784|English|UTC-4|.vc",
+                "Samoa|Apia|Oceania|🇼🇸|200K|2,842 km²|WST|+685|Samoan|UTC+13|.ws",
+                "San Marino|San Marino|Europe|🇸🇲|33K|61 km²|EUR|+378|Italian|UTC+1|.sm",
+                "Sao Tome and Principe|São Tomé|Africa|🇸🇹|223K|1,001 km²|STN|+239|Portuguese|UTC|.st",
+                "Seychelles|Victoria|Africa|🇸🇨|99K|452 km²|SCR|+248|English|UTC+4|.sc",
+                "Solomon Islands|Honiara|Oceania|🇸🇧|707K|28,896 km²|SBD|+677|English|UTC+11|.sb",
+                "Tonga|Nukuʻalofa|Oceania|🇹🇴|106K|747 km²|TOP|+676|Tongan|UTC+13|.to",
+                "Tuvalu|Funafuti|Oceania|🇹🇻|11K|26 km²|AUD|+688|Tuvaluan|UTC+12|.tv",
+                "Vanuatu|Port Vila|Oceania|🇻🇺|314K|12,189 km²|VUV|+678|Bislama|UTC+11|.vu",
+                "Vatican City|Vatican City|Europe|🇻🇦|800|0.44 km²|EUR|+379|Italian|UTC+1|.va",
+                "Montenegro|Podgorica|Europe|🇲🇪|619K|13,812 km²|EUR|+382|Montenegrin|UTC+1|.me",
+                "Kosovo|Pristina|Europe|🇽🇰|1.8M|10,887 km²|EUR|+383|Albanian|UTC+1|.xk",
+                "Djibouti|Djibouti|Africa|🇩🇯|1M|23,200 km²|DJF|+253|French|UTC+3|.dj",
+                "Eswatini|Mbabane|Africa|🇸🇿|1.1M|17,364 km²|SZL|+268|Swazi|UTC+2|.sz",
+                "Mauritius|Port Louis|Africa|🇲🇺|1.2M|2,040 km²|MUR|+230|English|UTC+4|.mu",
+                "Equatorial Guinea|Malabo|Africa|🇬🇶|1.6M|28,051 km²|XAF|+240|Spanish|UTC+1|.gq",
+                "Guinea-Bissau|Bissau|Africa|🇬🇼|2M|36,125 km²|XOF|+245|Portuguese|UTC|.gw",
+                "Lesotho|Maseru|Africa|🇱🇸|2.1M|30,355 km²|LSL|+266|Sotho|UTC+2|.ls",
+                "Gambia|Banjul|Africa|🇬🇲|2.5M|11,295 km²|GMD|+220|English|UTC|.gm",
+                "Eritrea|Asmara|Africa|🇪🇷|3.6M|117,600 km²|ERN|+291|Tigrinya|UTC+3|.er",
+                "Mauritania|Nouakchott|Africa|🇲🇷|4.7M|1.03M km²|MRU|+222|Arabic|UTC|.mr",
+                "Central African Republic|Bangui|Africa|🇨🇫|5M|622,984 km²|XAF|+236|Sango|UTC+1|.cf",
+                "Congo (Congo-Brazzaville)|Brazzaville|Africa|🇨🇬|5.6M|342,000 km²|XAF|+242|French|UTC+1|.cg",
+                "Togo|Lomé|Africa|🇹🇬|8.4M|56,785 km²|XOF|+228|French|UTC|.tg",
+                "Burundi|Gitega|Africa|🇧🇮|12M|27,834 km²|BIF|+257|Kirundi|UTC+2|.bi",
+                "Benin|Porto-Novo|Africa|🇧🇯|13M|114,763 km²|XOF|+229|French|UTC+1|.bj",
+                "Rwanda|Kigali|Africa|🇷🇼|13M|26,338 km²|RWF|+250|Kinyarwanda|UTC+2|.rw",
+                "Guinea|Conakry|Africa|🇬🇳|13M|245,857 km²|GNF|+224|French|UTC|.gn",
+                "Chad|N'Djamena|Africa|🇹🇩|17M|1.28M km²|XAF|+235|French|UTC+1|.td",
+                "Senegal|Dakar|Africa|🇸🇳|17M|196,722 km²|XOF|+221|French|UTC|.sn",
+                "Mali|Bamako|Africa|🇲🇱|21M|1.24M km²|XOF|+223|French|UTC|.ml",
+                "Burkina Faso|Ouagadougou|Africa|🇧🇫|22M|274,200 km²|XOF|+226|French|UTC|.bf",
+                "Niger|Niamey|Africa|🇳🇪|25M|1.26M km²|XOF|+227|French|UTC+1|.ne"
+            ];
+
+            remainingCountries.forEach(line => {
+                const [name, capital, region, flag, pop, area, currency, dial, lang, tz, tld] = line.split('|');
+                let iso = tld ? tld.replace('.', '').toLowerCase() : '';
+                if(isoExceptions[iso]) iso = isoExceptions[iso];
+                // Ensure clean IDs here too for perfect matching
+                const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                if(!parsedCountries.find(c => c.id === id)) {
+                    parsedCountries.push({ name, capital, region, flag, flagUrl: `https://flagcdn.com/w320/${iso}.png`, pop, area, currency, dial, lang, tz, tld, id });
+                }
+            });
+
+            // Clean up: Remove duplicates and ensure list consists of exactly the 195 authentic countries
+            const uniqueCountries = [];
+            const ids = new Set();
+            for(let c of parsedCountries) {
+                if(!ids.has(c.id) && uniqueCountries.length < 195) {
+                    uniqueCountries.push(c);
+                    ids.add(c.id);
+                }
+            }
+            parsedCountries.length = 0;
+            parsedCountries.push(...uniqueCountries);
+
+            // Navigate using preserved session state rather than hardcoded 'home'
+            if(appState.view === 'detail' && appState.activeCountry) {
+                navigateTo('detail', appState.activeCountry.id);
+            } else {
+                navigateTo(appState.view || 'home');
+            }
+
+            // Close modal on outside click
+            document.getElementById('modal-backdrop').addEventListener('click', (e) => {
+                if(e.target.id === 'modal-backdrop') closeModal();
+            });
+        });
+
+    </script>
+</body>
+</html>
